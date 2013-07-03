@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{42A35C23-9A76-4DD4-98ED-AA1EB3D757CD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ShogiCore</RootNamespace>
+    <AssemblyName>ShogiCore</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>..\log4net\bin\net\2.0\release\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AppIOManager.cs" />
+    <Compile Include="Board.Coordinate.cs" />
+    <Compile Include="Board.cs" />
+    <Compile Include="Board.Gen.cs" />
+    <Compile Include="Board.LispGen.cs" />
+    <Compile Include="Board.Static.cs" />
+    <Compile Include="BoardDebugger.cs" />
+    <Compile Include="BoardHistoryEntry.cs" />
+    <Compile Include="BoardMoveEventArgs.cs" />
+    <Compile Include="BoardProperty\BoardPieceCount.cs" />
+    <Compile Include="BoardProperty\BoardPoint.cs" />
+    <Compile Include="BoardProperty\BoardProperty.cs" />
+    <Compile Include="BoardProperty\BoardStage.cs" />
+    <Compile Include="BoardProperty\BoardTerritory.cs" />
+    <Compile Include="BoardUtility.cs" />
+    <Compile Include="BoardUtility.RPrep.cs" />
+    <Compile Include="BonanzaConstants.cs" />
+    <Compile Include="ConsoleUtility.cs" />
+    <Compile Include="CSAGame.cs" />
+    <Compile Include="CSA\CSAClient.cs" />
+    <Compile Include="CSA\CSAClientEventArgs.cs" />
+    <Compile Include="CSA\CSACommand.cs" />
+    <Compile Include="CSA\CSAGameSummary.cs" />
+    <Compile Include="CSA\CSAInternalCommand.cs" />
+    <Compile Include="CSA\CSAState.cs" />
+    <Compile Include="CSVWriter.cs" />
+    <Compile Include="Diagnostics\LiteStopwatch.cs" />
+    <Compile Include="Diagnostics\Log4netErrorHandler.cs" />
+    <Compile Include="Diagnostics\Log4netLazyMinimalLock.cs" />
+    <Compile Include="Drawing\BlunderGraphics.cs" />
+    <Compile Include="Drawing\BlunderViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Drawing\BlunderViewControl.Designer.cs">
+      <DependentUpon>BlunderViewControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Drawing\Resources.Designer.cs" />
+    <Compile Include="GameResult.cs" />
+    <Compile Include="GameStatistics.cs" />
+    <Compile Include="GenerateCheckTable.cs" />
+    <Compile Include="HashSeed.cs" />
+    <Compile Include="HashSeed.Table.cs" />
+    <Compile Include="IO\IOUtility.cs" />
+    <Compile Include="IO\UnsafeMemoryReadStream.cs" />
+    <Compile Include="IO\WinFile.cs" />
+    <Compile Include="LinqEmu.cs" />
+    <Compile Include="ManualProfiler.cs" />
+    <Compile Include="MathUtility.cs" />
+    <Compile Include="Move.cs" />
+    <Compile Include="MoveList.cs" />
+    <Compile Include="MoveListRef.cs" />
+    <Compile Include="MoveUtility.cs" />
+    <Compile Include="Notation\BoardData.cs" />
+    <Compile Include="Notation\DPPNotationReader.cs" />
+    <Compile Include="Notation\KifuNotationReader.cs" />
+    <Compile Include="Notation\KifuNotationWriter.cs" />
+    <Compile Include="Notation\KisenNotationReader.cs" />
+    <Compile Include="Notation\MoveData.cs" />
+    <Compile Include="Notation\Notation.cs" />
+    <Compile Include="Notation\NotationException.cs" />
+    <Compile Include="Notation\NotationHash.cs" />
+    <Compile Include="Notation\NotationHash.Table.cs" />
+    <Compile Include="Notation\NotationLoader.cs" />
+    <Compile Include="Notation\NotationReader.cs" />
+    <Compile Include="Notation\NotationUtility.cs" />
+    <Compile Include="Notation\NotationWriter.cs" />
+    <Compile Include="Notation\PCLNotationReader.cs" />
+    <Compile Include="Notation\PCLNotationWriter.cs" />
+    <Compile Include="Notation\SFENNotationReader.cs" />
+    <Compile Include="Notation\SFENNotationWriter.cs" />
+    <Compile Include="Notation\SquareData.cs" />
+    <Compile Include="Notation\UsapyonNotationReader.cs" />
+    <Compile Include="Piece.cs" />
+    <Compile Include="PieceUtility.cs" />
+    <Compile Include="Player.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RandomPlayer.cs" />
+    <Compile Include="RandUtility.cs" />
+    <Compile Include="SortedListOfLong.cs" />
+    <Compile Include="SuccessFailureCounter.cs" />
+    <Compile Include="Threading\CallbackTimer.cs" />
+    <Compile Include="Threading\IOLock.cs" />
+    <Compile Include="Threading\ParallelRunner.cs" />
+    <Compile Include="Threading\ThreadException.cs" />
+    <Compile Include="Threading\ThreadUtility.cs" />
+    <Compile Include="Toolkit\DictionaryForXml.cs" />
+    <Compile Include="Toolkit\GCStopwatch.cs" />
+    <Compile Include="Toolkit\IO\SubStream.cs" />
+    <Compile Include="Toolkit\IO\Zip.cs" />
+    <Compile Include="Toolkit\MersenneTwister.cs" />
+    <Compile Include="Toolkit\ProgressDisplay.cs" />
+    <Compile Include="UnsafeMemory.cs" />
+    <Compile Include="UnsafeMemoryAssignor.cs" />
+    <Compile Include="UnsafeMemoryStaticBlock.cs" />
+    <Compile Include="USIPlayer.cs" />
+    <Compile Include="USI\USIClient.cs" />
+    <Compile Include="USI\USIClientState.cs" />
+    <Compile Include="USI\USICommand.cs" />
+    <Compile Include="USI\USIDriver.cs" />
+    <Compile Include="USI\USIEventArgs.cs" />
+    <Compile Include="USI\USIInfo.cs" />
+    <Compile Include="USI\USIOptions.cs" />
+    <Compile Include="Utility.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Drawing\BlunderViewControl.resx">
+      <DependentUpon>BlunderViewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Drawing\Resources.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Drawing\Resources\ban_kaya_a.png" />
+    <Content Include="Drawing\Resources\focus_bold_r.png" />
+    <Content Include="Drawing\Resources\focus_thin_r.png" />
+    <Content Include="Drawing\Resources\focus_trpt_r.png" />
+    <Content Include="Drawing\Resources\Gfu.png" />
+    <Content Include="Drawing\Resources\Ggin.png" />
+    <Content Include="Drawing\Resources\Ghi.png" />
+    <Content Include="Drawing\Resources\Gkaku.png" />
+    <Content Include="Drawing\Resources\Gkei.png" />
+    <Content Include="Drawing\Resources\Gkin.png" />
+    <Content Include="Drawing\Resources\Gkyo.png" />
+    <Content Include="Drawing\Resources\Gngin.png" />
+    <Content Include="Drawing\Resources\Gnkei.png" />
+    <Content Include="Drawing\Resources\Gnkyo.png" />
+    <Content Include="Drawing\Resources\Gou.png" />
+    <Content Include="Drawing\Resources\Gryu.png" />
+    <Content Include="Drawing\Resources\Gto.png" />
+    <Content Include="Drawing\Resources\Guma.png" />
+    <Content Include="Drawing\Resources\masu_dot_xy.png" />
+    <Content Include="Drawing\Resources\Sfu.png" />
+    <Content Include="Drawing\Resources\Sgin.png" />
+    <Content Include="Drawing\Resources\Shi.png" />
+    <Content Include="Drawing\Resources\Skaku.png" />
+    <Content Include="Drawing\Resources\Skei.png" />
+    <Content Include="Drawing\Resources\Skin.png" />
+    <Content Include="Drawing\Resources\Skyo.png" />
+    <Content Include="Drawing\Resources\Sngin.png" />
+    <Content Include="Drawing\Resources\Snkei.png" />
+    <Content Include="Drawing\Resources\Snkyo.png" />
+    <Content Include="Drawing\Resources\Sou.png" />
+    <Content Include="Drawing\Resources\Sryu.png" />
+    <Content Include="Drawing\Resources\Sto.png" />
+    <Content Include="Drawing\Resources\Suma.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Drawing\Resources\将棋ソフト用リソース置き場.URL" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
