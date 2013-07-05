@@ -1,5 +1,5 @@
 namespace ShogiCore.Drawing {
-    partial class BlunderViewControl {
+    public partial class BlunderViewControl {
         /// <summary> 
         /// 必要なデザイナ変数です。
         /// </summary>

@@ -9,6 +9,8 @@ namespace ShogiCore.Drawing {
     /// 局面の描画。pixelなレベルで、ものすごく将棋所のパクり。
     /// </summary>
     public class BlunderGraphics : IDisposable {
+        bool initializeSucceeded = false;
+
         /// <summary>
         /// 盤面画像
         /// </summary>
@@ -44,7 +46,7 @@ namespace ShogiCore.Drawing {
         Rectangle secondHandRect;
         Rectangle boardRect;
         Rectangle firstHandRect;
-        Bitmap baseBitmap;
+        Bitmap baseBitmap = null;
         Font font = new Font(FontFamily.GenericSerif, 14.0f);
         StringFormat stringFormat = new StringFormat() {
             Alignment = StringAlignment.Far,
@@ -56,62 +58,68 @@ namespace ShogiCore.Drawing {
         /// 初期化。
         /// </summary>
         public BlunderGraphics() {
-            ShowFocus = true;
-            // 盤面
-            BoardBitmap = Resources.ban_kaya_a;
-            LinesBitmap = Resources.masu_dot_xy;
-            // 駒
-            PieceBitmaps = new Bitmap[32] {
-                null,
-                Resources.Sfu,
-                Resources.Skyo,
-                Resources.Skei,
-                Resources.Sgin,
-                Resources.Skin,
-                Resources.Skaku,
-                Resources.Shi,
-                Resources.Sou,
-                Resources.Sto,
-                Resources.Snkyo,
-                Resources.Snkei,
-                Resources.Sngin,
-                null,
-                Resources.Suma,
-                Resources.Sryu,
-                null,
-                Resources.Gfu,
-                Resources.Gkyo,
-                Resources.Gkei,
-                Resources.Ggin,
-                Resources.Gkin,
-                Resources.Gkaku,
-                Resources.Ghi,
-                Resources.Gou,
-                Resources.Gto,
-                Resources.Gnkyo,
-                Resources.Gnkei,
-                Resources.Gngin,
-                null,
-                Resources.Guma,
-                Resources.Gryu,
-            };
-            FocusToBitmap = Resources.focus_bold_r;
-            FocusFromBitmap = Resources.focus_thin_r;
-            // ベース画像
-            handSize = new Size(FocusToBitmap.Size.Width + 28, FocusToBitmap.Size.Height * 7 + 11);
-            boardSize = new Size(BoardBitmap.Size.Width, BoardBitmap.Size.Height);
-            secondHandRect = new Rectangle(3, 3, handSize.Width, handSize.Height);
-            boardRect = new Rectangle(secondHandRect.Right + 10, 3, boardSize.Width, boardSize.Height);
-            firstHandRect = new Rectangle(boardRect.Right + 10, boardRect.Bottom - handSize.Height, handSize.Width, handSize.Height);
-            baseBitmap = new Bitmap(firstHandRect.Right + 3, firstHandRect.Bottom + 3);
-            using (Graphics g = Graphics.FromImage(baseBitmap)) {
-                g.FillRectangle(Brushes.Ivory, new Rectangle(new Point(), baseBitmap.Size));
-                Rectangle sr = new Rectangle(0, 0, handSize.Width, handSize.Height);
-                Rectangle br = new Rectangle(0, 0, boardSize.Width, boardSize.Height);
-                g.DrawImage(BoardBitmap, secondHandRect, sr, GraphicsUnit.Pixel);
-                g.DrawImage(BoardBitmap, firstHandRect, sr, GraphicsUnit.Pixel);
-                g.DrawImage(BoardBitmap, boardRect, br, GraphicsUnit.Pixel);
-                g.DrawImage(LinesBitmap, boardRect, br, GraphicsUnit.Pixel);
+            try {
+                ShowFocus = true;
+                // 盤面
+                BoardBitmap = Resources.ban_kaya_a;
+                LinesBitmap = Resources.masu_dot_xy;
+                // 駒
+                PieceBitmaps = new Bitmap[32] {
+                    null,
+                    Resources.Sfu,
+                    Resources.Skyo,
+                    Resources.Skei,
+                    Resources.Sgin,
+                    Resources.Skin,
+                    Resources.Skaku,
+                    Resources.Shi,
+                    Resources.Sou,
+                    Resources.Sto,
+                    Resources.Snkyo,
+                    Resources.Snkei,
+                    Resources.Sngin,
+                    null,
+                    Resources.Suma,
+                    Resources.Sryu,
+                    null,
+                    Resources.Gfu,
+                    Resources.Gkyo,
+                    Resources.Gkei,
+                    Resources.Ggin,
+                    Resources.Gkin,
+                    Resources.Gkaku,
+                    Resources.Ghi,
+                    Resources.Gou,
+                    Resources.Gto,
+                    Resources.Gnkyo,
+                    Resources.Gnkei,
+                    Resources.Gngin,
+                    null,
+                    Resources.Guma,
+                    Resources.Gryu,
+                };
+                FocusToBitmap = Resources.focus_bold_r;
+                FocusFromBitmap = Resources.focus_thin_r;
+                // ベース画像
+                handSize = new Size(FocusToBitmap.Size.Width + 28, FocusToBitmap.Size.Height * 7 + 11);
+                boardSize = new Size(BoardBitmap.Size.Width, BoardBitmap.Size.Height);
+                secondHandRect = new Rectangle(3, 3, handSize.Width, handSize.Height);
+                boardRect = new Rectangle(secondHandRect.Right + 10, 3, boardSize.Width, boardSize.Height);
+                firstHandRect = new Rectangle(boardRect.Right + 10, boardRect.Bottom - handSize.Height, handSize.Width, handSize.Height);
+                baseBitmap = new Bitmap(firstHandRect.Right + 3, firstHandRect.Bottom + 3);
+                using (Graphics g = Graphics.FromImage(baseBitmap)) {
+                    g.FillRectangle(Brushes.Ivory, new Rectangle(new Point(), baseBitmap.Size));
+                    Rectangle sr = new Rectangle(0, 0, handSize.Width, handSize.Height);
+                    Rectangle br = new Rectangle(0, 0, boardSize.Width, boardSize.Height);
+                    g.DrawImage(BoardBitmap, secondHandRect, sr, GraphicsUnit.Pixel);
+                    g.DrawImage(BoardBitmap, firstHandRect, sr, GraphicsUnit.Pixel);
+                    g.DrawImage(BoardBitmap, boardRect, br, GraphicsUnit.Pixel);
+                    g.DrawImage(LinesBitmap, boardRect, br, GraphicsUnit.Pixel);
+                }
+
+                initializeSucceeded = true;
+            } catch {
+                initializeSucceeded = false;
             }
         }
 
@@ -119,32 +127,35 @@ namespace ShogiCore.Drawing {
         /// 後始末
         /// </summary>
         public void Dispose() {
-            baseBitmap.Dispose();
+            if (baseBitmap != null) {
+                baseBitmap.Dispose();
+            }
         }
 
         /// <summary>
         /// 描画サイズ。
         /// </summary>
         public Size Size {
-            get { return baseBitmap.Size; }
+            get { return new Size(Width, Height); }
         }
         /// <summary>
         /// 描画サイズ。
         /// </summary>
         public int Width {
-            get { return baseBitmap.Width; }
+            get { return initializeSucceeded ? baseBitmap.Width : 578; }
         }
         /// <summary>
         /// 描画サイズ。
         /// </summary>
         public int Height {
-            get { return baseBitmap.Height; }
+            get { return initializeSucceeded ? baseBitmap.Height : 460; }
         }
 
         /// <summary>
         /// GraphicsにBoardを描画。
         /// </summary>
         public void Draw(Graphics g, Board board) {
+            if (!initializeSucceeded) return;
             // ベース画像
             g.DrawImage(baseBitmap, new Rectangle(new Point(), baseBitmap.Size));
             // 後手持ち駒
