@@ -204,6 +204,7 @@ namespace ShogiCore.Drawing {
         /// 盤上の駒の描画
         /// </summary>
         public void DrawPiece(Graphics g, Point pt, Piece p) {
+            if (!initializeSucceeded) return;
             g.DrawImage(PieceBitmaps[(byte)p], new Rectangle(pt, FocusToBitmap.Size));
         }
 
@@ -211,6 +212,7 @@ namespace ShogiCore.Drawing {
         /// 盤上の駒を消す
         /// </summary>
         public void ErasePiece(Graphics g, int file, int rank) {
+            if (!initializeSucceeded) return;
             Point pt = GetSquarePoint(file, rank);
             Rectangle rc = new Rectangle(pt, FocusToBitmap.Size);
             g.DrawImage(baseBitmap, pt.X, pt.Y, rc, GraphicsUnit.Pixel);
@@ -220,6 +222,7 @@ namespace ShogiCore.Drawing {
         /// 持ち駒の描画
         /// </summary>
         public void DrawHand(Graphics g, Board board, int turn, Piece piece) {
+            if (!initializeSucceeded) return;
             int count = board.GetHand(turn, piece);
             if (count <= 0) return;
 

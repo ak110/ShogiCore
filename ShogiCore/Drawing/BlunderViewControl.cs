@@ -108,9 +108,12 @@ namespace ShogiCore.Drawing {
                     // 次の描画
                     if (IsDisposed) break; // 念のため
                     ar = BeginInvoke(new MethodInvoker(() => {
-                        if (!IsDisposed) {
-                            Invalidate();
-                            Update();
+                        try {
+                            if (!IsDisposed) {
+                                Invalidate();
+                                Update();
+                            }
+                        } catch {
                         }
                     }));
                 } catch (Exception e) {
