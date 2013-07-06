@@ -22,17 +22,21 @@ namespace ShogiCore {
         /// </summary>
         public bool HasScore { get; private set; }
         /// <summary>
-        /// infoのscore cpコマンドの値
+        /// info score cpコマンドの値
         /// </summary>
         public int LastScore { get; private set; }
         /// <summary>
-        /// infoのscore mateを受け取っていたらtrue。(LastScoreに[MateValue + 手数]が入ってる)
+        /// info score mateを受け取っていたらtrue。(LastScoreに[MateValue + 手数]が入ってる)
         /// </summary>
         public bool LastScoreWasMate { get; private set; }
         /// <summary>
-        /// infoのpvコマンドの値。非null。
+        /// info pvコマンドの値。非null。
         /// </summary>
         public string LastPV { get; private set; }
+        /// <summary>
+        /// info npsコマンドの値。
+        /// </summary>
+        public double? LastNPS { get; private set; }
 
         /// <summary>
         /// USIDriver
@@ -51,6 +55,11 @@ namespace ShogiCore {
         /// InfoReceived
         /// </summary>
         public event EventHandler<USIInfoEventArgs> InfoReceived;
+
+        /// <summary>
+        /// １対局分のNPSのリスト
+        /// </summary>
+        public List<double?> GameNPSList { get; private set; }
 
         /// <summary>
         /// 初期化
@@ -76,6 +85,7 @@ namespace ShogiCore {
             //Options["USI_Hash"] = "32";
             // 念のため初期化
             LastPV = "";
+            GameNPSList = new List<double?>();
         }
 
         /// <summary>
@@ -118,6 +128,7 @@ namespace ShogiCore {
             HasScore = false;
             LastScore = 0;
             LastPV = "";
+            LastNPS = null;
 
             if (!Driver.GameStarted) {
                 Driver.SendUSINewGame();
@@ -133,6 +144,8 @@ namespace ShogiCore {
 
                 switch (command.Name) {
                     case "bestmove":
+                        GameNPSList.Add(LastNPS);
+
                         if (command.Parameters.StartsWith("resign", StringComparison.Ordinal)) {
                             return Move.Resign;
                         } else if (command.Parameters.StartsWith("win", StringComparison.Ordinal)) {
@@ -171,6 +184,7 @@ namespace ShogiCore {
         }
 
         public void GameEnd(Board board, GameResult result) {
+            GameNPSList.Clear();
             switch (result) {
                 case GameResult.Win: Driver.SendGameOverWin(); break;
                 case GameResult.Lose: Driver.SendGameOverLose(); break;
@@ -232,6 +246,18 @@ namespace ShogiCore {
                         break;
 
                     case "pv": LastPV = info.Parameters; break;
+
+                    case "nps": {
+                            string npsStr = info.Parameters.ToLowerInvariant().Replace(",", "");
+                            if (npsStr.EndsWith("m") || npsStr.EndsWith("ｍ")) {
+                                LastNPS = double.Parse(npsStr.Substring(0, npsStr.Length - 1)) * 1024 * 1024;
+                            } else if (npsStr.EndsWith("k") || npsStr.EndsWith("ｋ")) {
+                                LastNPS = double.Parse(npsStr.Substring(0, npsStr.Length - 1)) * 1024;
+                            } else {
+                                LastNPS = double.Parse(npsStr);
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -239,6 +265,43 @@ namespace ShogiCore {
             if (InfoReceived != null) {
                 InfoReceived(sender, e);
             }
+        }
+
+        /// <summary>
+        /// 全体のNPSの平均
+        /// </summary>
+        public double? MeanNPS {
+            get { return GetMeanNPS(GameNPSList); }
+        }
+        /// <summary>
+        /// 序盤のNPSの平均
+        /// </summary>
+        public double? MeanNPSOfOpening {
+            get { return GetMeanNPS(GameNPSList.Take(GameNPSList.Count / 2)); }
+        }
+        /// <summary>
+        /// 終盤のNPSの平均
+        /// </summary>
+        public double? MeanNPSOfEndGame {
+            get { return GetMeanNPS(GameNPSList.Skip(GameNPSList.Count / 2)); }
+        }
+
+        /// <summary>
+        /// NPSの平均を算出。特異値の影響を避けるために中央値から3割以上外れているものは除外して平均。
+        /// </summary>
+        private double? GetMeanNPS(IEnumerable<double?> list) {
+            // nullを除外して要素数チェック
+            var nps = list.Where(x => x.HasValue).Select(x => x.Value);
+            if (!nps.Any()) return null;
+            // 中央値を求める
+            var npsOrdered = nps.OrderBy(x => x);
+            int c = nps.Count();
+            double median = c % 2 == 0 ?
+                npsOrdered.Skip(c / 2 - 1).Take(2).Average() :
+                npsOrdered.Skip(c / 2).First();
+            // 中央値から±3割以上離れている値は除外して平均
+            double a = median * 0.3;
+            return nps.Where(x => Math.Abs(median - x) <= a).Average();
         }
     }
 }
