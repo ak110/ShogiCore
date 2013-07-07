@@ -308,14 +308,16 @@ namespace ShogiCore.USI {
                 case "option": {
                         Options.Add(OptionEntry.Parse(command.Parameters));
                     } break;
-                case "info": {
+                case "info": try {
                         USIInfoEventArgs infoEventArgs = new USIInfoEventArgs(
                             USIInfo.Parse(command.Parameters));
                         var InfoReceived = this.InfoReceived;
                         if (InfoReceived != null) {
                             InfoReceived(this, infoEventArgs);
                         }
-                    } break;
+                    } catch (Exception ex) {
+                        logger.Warn("infoコマンド処理中に例外発生: " + command.Parameters, ex);
+                    }break;
                 case "bestmove":
                     lock (goingLock) {
                         Going = false;

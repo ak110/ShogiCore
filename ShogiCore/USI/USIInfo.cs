@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using ShogiCore.Notation;
 
 namespace ShogiCore.USI {
     /// <summary>
     /// USIコマンド
     /// </summary>
     public struct USIInfo {
+        static readonly log4net.ILog logger = log4net.LogManager.GetLogger(
+            System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
         /// コマンド名
         /// </summary>
@@ -16,7 +20,7 @@ namespace ShogiCore.USI {
         /// <summary>
         /// パラメータ。空っぽでもnullにはせずに""とする。
         /// </summary>
-        public string Parameters { get; set; }
+        public string[] Parameters { get; set; }
 
         /// <summary>
         /// 空
@@ -36,67 +40,74 @@ namespace ShogiCore.USI {
                 throw new ArgumentException("改行が含まれた文字列は解析出来ません", "line");
             }
 
-            int i = 0;
-
             List<USIInfo> list = new List<USIInfo>();
-            while (i < input.Length) {
-                int sp = input.IndexOf(' ', i);
-                if (sp < 0) {
-                    string str = input.Substring(i).Trim();
-                    if (0 < str.Length) list.Add(new USIInfo() { Name = str });
-                    break;
-                }
 
-                string subcmd = input.Substring(i, sp - i);
-                switch (subcmd) {
-                case "depth":
-                case "seldepth":
-                case "time":
-                case "nodes":
-                case "nps":
-                case "currmove":
-                case "hashfull":
-                    // オプション1個なもの。
-                    {
-                        int sp2 = input.IndexOf(' ', sp + 1);
-                        if (sp2 < 0) sp2 = input.Length;
+            var inputList = input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries); // 2個以上の空白は無視しちゃう(例えinfo stringの中でも1個扱いにしちゃう)
+            for (int i = 0; i < inputList.Length; i++) {
+                switch (inputList[i]) {
+                    case "depth":
+                    case "seldepth":
+                    case "time":
+                    case "nodes":
+                    case "nps":
+                    case "currmove":
+                    case "hashfull":
+                        // オプション1個なもの。
                         list.Add(new USIInfo() {
-                            Name = subcmd,
-                            Parameters = input.Substring(sp + 1, sp2 - sp - 1),
+                            Name = inputList[i],
+                            Parameters = new[]{ inputList[i + 1] },
                         });
-                        i = sp2 + 1;
-                    }
-                    break;
+                        i++;
+                        break;
 
-                case "score":
-                    // オプション2個なもの。
-                    {
-                        int sp2 = input.IndexOf(' ', sp + 1);
-                        int sp3 = sp2 < 0 ? input.Length : input.IndexOf(' ', sp2 + 1);
+                    case "score":
+                        // オプション2個なもの。
                         list.Add(new USIInfo() {
-                            Name = subcmd,
-                            Parameters = input.Substring(sp + 1, sp3 - sp - 1),
+                            Name = inputList[i],
+                            Parameters = new[] { inputList[i + 1], inputList[i + 2] },
                         });
-                        i = sp3 + 1;
-                    }
-                    break;
-                    
-                case "string":
-                case "pv":
-                default:
-                    Debug.Assert(subcmd == "string" || subcmd == "pv", "不明なサブコマンド: " + subcmd);
-                    // 行末まで。
-                    list.Add(new USIInfo() {
-                        Name = subcmd,
-                        Parameters = input.Substring(sp + 1),
-                    });
-                    i = input.Length;
-                    break;
-                }
+                        i += 2;
+                        break;
 
+                    case "pv":
+                        // 行末まで。
+                        list.Add(new USIInfo() {
+                            Name = inputList[i],
+                            Parameters = inputList.Skip(i + 1).ToArray(),
+                        });
+                        // SFENの指し手でないものが出てきたら普通のコマンドかもしれないのでそれ以降はもう一度処理する。
+                        for (i++; i < inputList.Length; i++) {
+                            if (!SFENNotationReader.IsMove(inputList[i])) {
+                                --i; // forなので1個戻す
+                                break;
+                            }
+                        }
+                        break;
+
+                    case "string":
+                        // 行末まで。
+                        list.Add(new USIInfo() {
+                            Name = inputList[i],
+                            Parameters = inputList.Skip(i + 1).ToArray(),
+                        });
+                        i = inputList.Length;
+                        break;
+
+                    default:
+                        logger.Warn("不正なinfoコマンド: " + inputList[i]);
+                        list.Add(new USIInfo() { Name = inputList[i] });
+                        break;
+                }
             }
 
             return list;
+        }
+
+        /// <summary>
+        /// 適当文字列化
+        /// </summary>
+        public override string ToString() {
+            return Name + " " + string.Join(" ", Parameters);
         }
     }
 }

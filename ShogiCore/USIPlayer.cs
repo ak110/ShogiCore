@@ -12,6 +12,9 @@ namespace ShogiCore {
     /// USIエンジンなPlayerクラス
     /// </summary>
     public class USIPlayer : IPlayer {
+        static readonly log4net.ILog logger = log4net.LogManager.GetLogger(
+            System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
         /// 詰みの値
         /// </summary>
@@ -32,7 +35,7 @@ namespace ShogiCore {
         /// <summary>
         /// info pvコマンドの値。非null。
         /// </summary>
-        public string LastPV { get; private set; }
+        public string[] LastPV { get; private set; }
         /// <summary>
         /// info npsコマンドの値。
         /// </summary>
@@ -84,7 +87,7 @@ namespace ShogiCore {
             //Options["USI_Ponder"] = "false";
             //Options["USI_Hash"] = "32";
             // 念のため初期化
-            LastPV = "";
+            LastPV = new string[0];
             GameNPSList = new List<double?>();
         }
 
@@ -127,7 +130,7 @@ namespace ShogiCore {
         public Move DoTurn(Board board, int firstTurnTime, int secondTurnTime, int byoyomi) {
             HasScore = false;
             LastScore = 0;
-            LastPV = "";
+            LastPV = new string[0];
             LastNPS = null;
 
             if (!Driver.GameStarted) {
@@ -153,12 +156,12 @@ namespace ShogiCore {
                         } else if (command.Parameters.StartsWith("pass", StringComparison.Ordinal)) {
                             return Move.Pass;
                         }
-                        string sfenMove = command.Parameters;
+                        string sfenMove = command.Parameters.Split(new[] { ' ' }, 2)[0]; // ponderとかは無視！
                         // PVと一致した指し手かどうかチェック
-                        if (!string.IsNullOrEmpty(LastPV) && !LastPV.StartsWith(sfenMove)) {
+                        if (0 < LastPV.Length && LastPV[0] != sfenMove) {
                             // 一致してなければ無効にしてしまう
                             HasScore = false;
-                            LastPV = "";
+                            LastPV = new string[0];
                             LastScore = 0;
                         }
                         // 指し手を解析
@@ -223,24 +226,33 @@ namespace ShogiCore {
                 switch (info.Name) {
                     case "score": {
                             HasScore = true;
-                            if (info.Parameters.StartsWith("cp ", StringComparison.Ordinal)) {
+                            if (info.Parameters.FirstOrDefault() == "cp") {
                                 // 評価値
                                 int n;
-                                if (int.TryParse(info.Parameters.Substring(3), out n)) {
+                                if (int.TryParse(info.Parameters.Skip(1).FirstOrDefault(), out n)) {
                                     LastScore = n;
                                 }
                                 LastScoreWasMate = false;
-                            } else if (info.Parameters.StartsWith("mate ", StringComparison.Ordinal)) {
+                            } else if (info.Parameters.FirstOrDefault() == "mate") {
                                 // 詰み (GameTreeでの値に合わせる)
-                                char c = info.Parameters[5];
+                                string mateStr = info.Parameters.Skip(1).FirstOrDefault();
                                 int n;
-                                if (int.TryParse(info.Parameters.Substring(5), out n)) {
+                                if (string.IsNullOrEmpty(mateStr)) {
+                                    LastScore = +MateValue;
+                                    logger.Warn("不正なinfo score mate");
+                                } else if (mateStr[0] == '+') {
+                                    LastScore = +MateValue;
+                                } else if (mateStr[0] == '-') {
+                                    LastScore = -MateValue;
+                                } else if (int.TryParse(mateStr, out n)) {
                                     LastScore = MateValue + Math.Abs(n);
                                 } else {
-                                    LastScore = MateValue;
+                                    LastScore = +MateValue;
+                                    logger.Warn("不正なinfo score mate: " + info.ToString());
                                 }
-                                if (c == '-') LastScore = -LastScore;
                                 LastScoreWasMate = true;
+                            } else {
+                                logger.Warn("不正なinfo score: " + info.ToString());
                             }
                         }
                         break;
@@ -248,7 +260,7 @@ namespace ShogiCore {
                     case "pv": LastPV = info.Parameters; break;
 
                     case "nps": {
-                            string npsStr = info.Parameters.ToLowerInvariant().Replace(",", "");
+                            string npsStr = info.Parameters.FirstOrDefault().Replace(",", "").ToLowerInvariant();
                             if (npsStr.EndsWith("m") || npsStr.EndsWith("ｍ")) {
                                 LastNPS = double.Parse(npsStr.Substring(0, npsStr.Length - 1)) * 1024 * 1024;
                             } else if (npsStr.EndsWith("k") || npsStr.EndsWith("ｋ")) {
