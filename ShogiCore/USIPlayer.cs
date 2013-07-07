@@ -33,6 +33,10 @@ namespace ShogiCore {
         /// </summary>
         public bool LastScoreWasMate { get; private set; }
         /// <summary>
+        /// scoreの表示用の文字列
+        /// </summary>
+        public string LastScoreString { get; private set; }
+        /// <summary>
         /// info pvコマンドの値。非null。
         /// </summary>
         public string[] LastPV { get; private set; }
@@ -130,6 +134,7 @@ namespace ShogiCore {
         public Move DoTurn(Board board, int firstTurnTime, int secondTurnTime, int byoyomi) {
             HasScore = false;
             LastScore = 0;
+            LastScoreString = "";
             LastPV = new string[0];
             LastNPS = null;
 
@@ -163,6 +168,7 @@ namespace ShogiCore {
                             HasScore = false;
                             LastPV = new string[0];
                             LastScore = 0;
+                            LastScoreString = "";
                         }
                         // 指し手を解析
                         Move move = Move.FromNotation(board, SFENNotationReader.ToMoveData(sfenMove));
@@ -228,9 +234,13 @@ namespace ShogiCore {
                             HasScore = true;
                             if (info.Parameters.FirstOrDefault() == "cp") {
                                 // 評価値
+                                string s = info.Parameters.Skip(1).FirstOrDefault();
                                 int n;
-                                if (int.TryParse(info.Parameters.Skip(1).FirstOrDefault(), out n)) {
+                                if (int.TryParse(s, out n)) {
                                     LastScore = n;
+                                    LastScoreString = s;
+                                } else {
+                                    LastScoreString = s;
                                 }
                                 LastScoreWasMate = false;
                             } else if (info.Parameters.FirstOrDefault() == "mate") {
