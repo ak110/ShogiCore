@@ -215,7 +215,7 @@ namespace ShogiCore.Notation {
             MoveData = moveData;
             Comment = comment;
             Value = value;
-            Time = -1;
+            Time = time.HasValue ? time.Value : - 1;
         }
     }
 }

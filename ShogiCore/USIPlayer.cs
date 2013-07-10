@@ -312,18 +312,23 @@ namespace ShogiCore {
         /// NPSの平均を算出。特異値の影響を避けるために中央値から3割以上外れているものは除外して平均。
         /// </summary>
         private double? GetMeanNPS(IEnumerable<double?> list) {
-            // nullを除外して要素数チェック
-            var nps = list.Where(x => x.HasValue).Select(x => x.Value);
-            if (!nps.Any()) return null;
-            // 中央値を求める
-            var npsOrdered = nps.OrderBy(x => x);
-            int c = nps.Count();
-            double median = c % 2 == 0 ?
-                npsOrdered.Skip(c / 2 - 1).Take(2).Average() :
-                npsOrdered.Skip(c / 2).First();
-            // 中央値から±3割以上離れている値は除外して平均
-            double a = median * 0.3;
-            return nps.Where(x => Math.Abs(median - x) <= a).Average();
+            try {
+                // nullを除外して要素数チェック
+                var nps = list.Where(x => x.HasValue).Select(x => x.Value);
+                if (!nps.Any()) return null;
+                // 中央値を求める
+                var npsOrdered = nps.OrderBy(x => x);
+                int c = nps.Count();
+                double median = c % 2 == 0 ?
+                    npsOrdered.Skip(c / 2 - 1).Take(2).Average() :
+                    npsOrdered.Skip(c / 2).First();
+                // 中央値から±3割以上離れている値は除外して平均
+                double a = median * 0.3;
+                return nps.Where(x => Math.Abs(median - x) <= a).Average();
+            } catch (Exception e) {
+                logger.Warn("平均NPS算出失敗", e);
+                return null;
+            }
         }
     }
 }

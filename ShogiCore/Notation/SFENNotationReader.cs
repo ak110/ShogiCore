@@ -66,7 +66,9 @@ namespace ShogiCore.Notation {
             if (data == null) {
                 throw new NotationException("SFEN棋譜データの読み込みに失敗しました");
             }
-            yield return InnerLoad(data);
+            foreach (string line in data.Split(new[] { Environment.NewLine, "\n" }, StringSplitOptions.RemoveEmptyEntries)) {
+                yield return InnerLoad(line);
+            }
         }
 
         /// <summary>
@@ -76,7 +78,7 @@ namespace ShogiCore.Notation {
             // 例：
             // lnsgkgsn1/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1
 
-            string[] str = data.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] str = data.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
             if (str.Length <= 0) {
                 throw new NotationFormatException("SFEN棋譜データの読み込みに失敗しました");
             }
