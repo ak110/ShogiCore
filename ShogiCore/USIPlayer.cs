@@ -41,6 +41,10 @@ namespace ShogiCore {
         /// </summary>
         public string[] LastPV { get; private set; }
         /// <summary>
+        /// info depthコマンドの値。
+        /// </summary>
+        public double? LastDepth { get; private set; }
+        /// <summary>
         /// info npsコマンドの値。
         /// </summary>
         public double? LastNPS { get; private set; }
@@ -63,6 +67,10 @@ namespace ShogiCore {
         /// </summary>
         public event EventHandler<USIInfoEventArgs> InfoReceived;
 
+        /// <summary>
+        /// １対局分の深さのリスト
+        /// </summary>
+        public List<double?> GameDepthList { get; private set; }
         /// <summary>
         /// １対局分のNPSのリスト
         /// </summary>
@@ -92,6 +100,7 @@ namespace ShogiCore {
             //Options["USI_Hash"] = "32";
             // 念のため初期化
             LastPV = new string[0];
+            GameDepthList = new List<double?>();
             GameNPSList = new List<double?>();
         }
 
@@ -136,6 +145,7 @@ namespace ShogiCore {
             LastScore = 0;
             LastScoreString = "";
             LastPV = new string[0];
+            LastDepth = null;
             LastNPS = null;
 
             if (!Driver.GameStarted) {
@@ -152,6 +162,7 @@ namespace ShogiCore {
 
                 switch (command.Name) {
                     case "bestmove":
+                        GameDepthList.Add(LastDepth);
                         GameNPSList.Add(LastNPS);
 
                         if (command.Parameters.StartsWith("resign", StringComparison.Ordinal)) {
@@ -193,6 +204,7 @@ namespace ShogiCore {
         }
 
         public void GameEnd(Board board, GameResult result) {
+            GameDepthList.Clear();
             GameNPSList.Clear();
             switch (result) {
                 case GameResult.Win: Driver.SendGameOverWin(); break;
@@ -269,15 +281,29 @@ namespace ShogiCore {
 
                     case "pv": LastPV = info.Parameters; break;
 
-                    case "nps": {
-                            string npsStr = info.Parameters.FirstOrDefault().Replace(",", "").ToLowerInvariant();
-                            if (npsStr.EndsWith("m") || npsStr.EndsWith("ｍ")) {
-                                LastNPS = double.Parse(npsStr.Substring(0, npsStr.Length - 1)) * 1024 * 1024;
-                            } else if (npsStr.EndsWith("k") || npsStr.EndsWith("ｋ")) {
-                                LastNPS = double.Parse(npsStr.Substring(0, npsStr.Length - 1)) * 1024;
+                    case "depth":
+                        try {
+                            string s = info.Parameters.FirstOrDefault().Replace(",", "");
+                            LastDepth = double.Parse(s);
+                        } catch (Exception ex) {
+                            logger.Debug("depthの解析に失敗: " + info.Parameters.FirstOrDefault(), ex);
+
+                        }
+                        break;
+
+                    case "nps":
+                        try {
+                            string s = info.Parameters.FirstOrDefault().Replace(",", "").ToLowerInvariant();
+                            if (s.EndsWith("m") || s.EndsWith("ｍ")) {
+                                LastNPS = double.Parse(s.Substring(0, s.Length - 1)) * 1024 * 1024;
+                            } else if (s.EndsWith("k") || s.EndsWith("ｋ")) {
+                                LastNPS = double.Parse(s.Substring(0, s.Length - 1)) * 1024;
                             } else {
-                                LastNPS = double.Parse(npsStr);
+                                LastNPS = double.Parse(s);
                             }
+                        } catch (Exception ex) {
+                            logger.Debug("npsの解析に失敗: " + info.Parameters.FirstOrDefault(), ex);
+
                         }
                         break;
                 }
@@ -290,28 +316,46 @@ namespace ShogiCore {
         }
 
         /// <summary>
+        /// 全体の深さの平均
+        /// </summary>
+        public double? MeanDepth {
+            get { return GetMean(GameDepthList, 1.0); }
+        }
+        /// <summary>
+        /// 序盤の深さの平均
+        /// </summary>
+        public double? MeanDepthOfOpening {
+            get { return GetMean(GameDepthList.Take(GameDepthList.Count / 2), 1.0); }
+        }
+        /// <summary>
+        /// 終盤の深さの平均
+        /// </summary>
+        public double? MeanDepthOfEndGame {
+            get { return GetMean(GameDepthList.Skip(GameDepthList.Count / 2), 1.0); }
+        }
+        /// <summary>
         /// 全体のNPSの平均
         /// </summary>
         public double? MeanNPS {
-            get { return GetMeanNPS(GameNPSList); }
+            get { return GetMean(GameNPSList); }
         }
         /// <summary>
         /// 序盤のNPSの平均
         /// </summary>
         public double? MeanNPSOfOpening {
-            get { return GetMeanNPS(GameNPSList.Take(GameNPSList.Count / 2)); }
+            get { return GetMean(GameNPSList.Take(GameNPSList.Count / 2)); }
         }
         /// <summary>
         /// 終盤のNPSの平均
         /// </summary>
         public double? MeanNPSOfEndGame {
-            get { return GetMeanNPS(GameNPSList.Skip(GameNPSList.Count / 2)); }
+            get { return GetMean(GameNPSList.Skip(GameNPSList.Count / 2)); }
         }
 
         /// <summary>
-        /// NPSの平均を算出。特異値の影響を避けるために中央値から3割以上外れているものは除外して平均。
+        /// 平均を算出。特異値の影響を避けるために中央値からmedianThreshold以上外れているものは除外して平均。
         /// </summary>
-        private double? GetMeanNPS(IEnumerable<double?> list) {
+        private double? GetMean(IEnumerable<double?> list, double medianThreshold = 0.3) {
             try {
                 // nullを除外して要素数チェック
                 var nps = list.Where(x => x.HasValue).Select(x => x.Value);
@@ -323,10 +367,10 @@ namespace ShogiCore {
                     npsOrdered.Skip(c / 2 - 1).Take(2).Average() :
                     npsOrdered.Skip(c / 2).First();
                 // 中央値から±3割以上離れている値は除外して平均
-                double a = median * 0.3;
+                double a = median * medianThreshold;
                 return nps.Where(x => Math.Abs(median - x) <= a).Average();
             } catch (Exception e) {
-                logger.Warn("平均NPS算出失敗", e);
+                logger.Warn("平均値算出失敗", e);
                 return null;
             }
         }
