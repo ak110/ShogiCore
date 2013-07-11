@@ -96,7 +96,7 @@ namespace ShogiCore.USI {
                     case "<3": break;
 
                     default:
-                        logger.Warn("不正なinfoコマンド: " + inputList[i]);
+                        logger.DebugFormat("不正なinfoコマンド: {0}", inputList[i]);
                         list.Add(new USIInfo() { Name = inputList[i] });
                         break;
                 }

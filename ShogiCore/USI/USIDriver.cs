@@ -196,9 +196,10 @@ namespace ShogiCore.USI {
                         case "usiok": return true;
                         case "id":
                         case "option":
-                            return false;
+                        case "info":
+                            return false; // 無視
                         default:
-                            logger.Info("usiok前に不正なコマンドを受信: " + command.ToString());
+                            logger.DebugFormat("usiok前に不正なコマンドを受信: {0}", command);
                             return false;
                     }
                 })) {
@@ -410,8 +411,10 @@ namespace ShogiCore.USI {
                 if (TryReceiveCommand(timeout, out command)) {
                     if (command.Name == "readyok") {
                         return true; // 成功
+                    } else if (command.Name == "info") {
+                        // 無視
                     } else {
-                        logger.Info("readyok前に不正なコマンドを受信: " + command.ToString());
+                        logger.DebugFormat("readyok前に不正なコマンドを受信: {0}", command);
                     }
                 } else {
                     return false; // 失敗

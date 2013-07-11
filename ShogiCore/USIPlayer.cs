@@ -367,8 +367,8 @@ namespace ShogiCore {
                     npsOrdered.Skip(c / 2 - 1).Take(2).Average() :
                     npsOrdered.Skip(c / 2).First();
                 // 中央値から±3割以上離れている値は除外して平均
-                double a = median * medianThreshold;
-                return nps.Where(x => Math.Abs(median - x) <= a).Average();
+                double th = median * medianThreshold;
+                return nps.Where(x => Math.Abs(median - x) <= th).Average();
             } catch (Exception e) {
                 logger.Warn("平均値算出失敗", e);
                 return null;
