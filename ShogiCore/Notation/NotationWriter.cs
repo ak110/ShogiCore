@@ -20,6 +20,18 @@ namespace ShogiCore.Notation {
         byte[] WriteToBinary(IEnumerable<Notation> notations);
     }
 
+    /// <summary>
+    /// 1棋譜用インターフェース
+    /// </summary>
+    public static class NotationWriterExtensions {
+        public static string WriteToString(this IStringNotationWriter that, Notation notation) {
+            return that.WriteToString(Enumerable.Repeat(notation, 1));
+        }
+        public static byte[] WriteToBinary(this IBinaryNotationWriter that, Notation notation) {
+            return that.WriteToBinary(Enumerable.Repeat(notation, 1));
+        }
+    }
+
     public abstract class StringNotationWriter : IBinaryNotationWriter, IStringNotationWriter {
         /// <summary>
         /// Encoding
