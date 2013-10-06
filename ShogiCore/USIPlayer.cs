@@ -138,6 +138,7 @@ namespace ShogiCore {
             if (!Driver.WaitForReadyOK(30000)) {
                 throw new ApplicationException("USIエンジンからの応答がありませんでした。");
             }
+            Driver.SendUSINewGame();
         }
 
         public Move DoTurn(Board board, int firstTurnTime, int secondTurnTime, int byoyomi) {
@@ -148,9 +149,6 @@ namespace ShogiCore {
             LastDepth = null;
             LastNPS = null;
 
-            if (!Driver.GameStarted) {
-                Driver.SendUSINewGame();
-            }
             Driver.SendPosition(board.ToNotation());
             Driver.SendGo(firstTurnTime, secondTurnTime, byoyomi);
 
