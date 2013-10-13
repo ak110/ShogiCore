@@ -164,9 +164,13 @@ namespace ShogiCore.Notation {
                 switch (line[0]) {
                     case 'N': // 対局者名
                         if (line[1] == '+') {
-                            notation.FirstPlayerName = line.Substring(2).Trim();
+                            if (2 < line.Length) {
+                                notation.FirstPlayerName = line.Substring(2).Trim();
+                            }
                         } else if (line[1] == '-') {
-                            notation.SecondPlayerName = line.Substring(2).Trim();
+                            if (2 < line.Length) {
+                                notation.SecondPlayerName = line.Substring(2).Trim();
+                            }
                         } else {
                             throw new NotationException("CSA/PCL棋譜データの読み込みに失敗: 行=" + line);
                         }
@@ -219,6 +223,7 @@ namespace ShogiCore.Notation {
                         if (line.StartsWith("%TORYO", StringComparison.Ordinal)) { // 投了
                             notation.Winner = moves.Count % 2 == 0 ? 1 : 0;
                         } else if (line.StartsWith("%CHUDAN", StringComparison.Ordinal)) { // 中断
+                            notation.Winner = -1;
                         } else if (line.StartsWith("%SENNICHITE", StringComparison.Ordinal)) { // 千日手
                             notation.Winner = -1;
                         } else if (line.StartsWith("%TIME_UP", StringComparison.Ordinal)) { // 時間切れ(手番側の時間切れ)
@@ -228,10 +233,12 @@ namespace ShogiCore.Notation {
                         } else if (line.StartsWith("%JISHOGI", StringComparison.Ordinal)) { // 持将棋
                             notation.Winner = -1;
                         } else if (line.StartsWith("%KACHI", StringComparison.Ordinal)) { // (入玉で)勝ちの宣言
+                            notation.Winner = moves.Count % 2 == 0 ? 0 : 1;
                         } else if (line.StartsWith("%HIKIWAKE", StringComparison.Ordinal)) { // (入玉で)引き分けの宣言
                             notation.Winner = -1;
                         } else if (line.StartsWith("%MATTA", StringComparison.Ordinal)) { // 待った
                         } else if (line.StartsWith("%TSUMI", StringComparison.Ordinal)) { // 詰み
+                            notation.Winner = moves.Count % 2 == 0 ? 1 : 0;
                         } else if (line.StartsWith("%FUZUMI", StringComparison.Ordinal)) { // 不詰
                         } else if (line.StartsWith("%ERROR", StringComparison.Ordinal)) { // エラー
                             notation.Winner = -1; // ?

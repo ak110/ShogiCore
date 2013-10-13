@@ -21,7 +21,7 @@ namespace ShogiCore.Notation {
         /// </summary>
         private void BuildCSAStandard(Notation notation, StringBuilder str) {
             // ver、N+、N-
-            str.Append("V2.1\n");
+            str.Append("V2.2\n");
             str.Append("N+").Append(notation.FirstPlayerName).Append('\n');
             str.Append("N-").Append(notation.SecondPlayerName).Append('\n');
             // 盤面
@@ -29,41 +29,7 @@ namespace ShogiCore.Notation {
             if (board == null) {
                 str.Append("PI\n");
             } else {
-                // PIとかで表現出来るかもしれなくても手抜き。
-                for (int y = 0; y < 9; y++) {
-                    int rank = y + 1;
-                    str.Append("P").Append(rank);
-                    for (int x = 0; x < 9; x++) {
-                        int file = 9 - x;
-                        var p = board[file, rank];
-                        if (p == Piece.EMPTY || p == Piece.ENEMY) {
-                            str.Append(" * ");
-                        } else if ((p & Piece.ENEMY) != 0) {
-                            str.Append('-').Append(PCLNotationReader.ToCSAName(p));
-                        } else {
-                            str.Append('+').Append(PCLNotationReader.ToCSAName(p));
-                        }
-                    }
-                    str.Append('\n');
-                }
-                // 持ち駒。ALが使えるかもしれなくても手抜き。
-                for (int t = 0; t < 2; t++) {
-                    bool appended = false;
-                    int[] hand = board.GetHand(t);
-                    for (Piece p = Piece.FU; p < Piece.OU; p++) {
-                        int n = hand[(byte)p];
-                        if (n <= 0) continue;
-                        if (!appended) {
-                            appended = true;
-                            str.Append(t == 0 ? "P+" : "P-");
-                        }
-                        string name = "00" + PCLNotationReader.ToCSAName(p);
-                        for (int i = 0; i < n; i++) str.Append(name);
-                    }
-                    if (appended) {
-                        str.Append('\n');
-                    }
-                }
+                str.Append(ToString(board));
             }
             // 手番
             int firstTurn = board == null || board.Turn == 0 ? 0 : 1;
@@ -85,6 +51,49 @@ namespace ShogiCore.Notation {
                 // 最後の手を指したのが勝者側なら投了扱いにしてみる (手抜き)
                 str.Append("%TORYO").Append('\n');
             }
+        }
+
+        /// <summary>
+        /// 局面の文字列化
+        /// </summary>
+        public static string ToString(BoardData board) {
+            StringBuilder str = new StringBuilder();
+            // PIとかで表現出来るかもしれなくても手抜き。
+            for (int y = 0; y < 9; y++) {
+                int rank = y + 1;
+                str.Append("P").Append(rank);
+                for (int x = 0; x < 9; x++) {
+                    int file = 9 - x;
+                    var p = board[file, rank];
+                    if (p == Piece.EMPTY || p == Piece.ENEMY) {
+                        str.Append(" * ");
+                    } else if ((p & Piece.ENEMY) != 0) {
+                        str.Append('-').Append(PCLNotationReader.ToCSAName(p));
+                    } else {
+                        str.Append('+').Append(PCLNotationReader.ToCSAName(p));
+                    }
+                }
+                str.Append('\n');
+            }
+            // 持ち駒。ALが使えるかもしれなくても手抜き。
+            for (int t = 0; t < 2; t++) {
+                bool appended = false;
+                int[] hand = board.GetHand(t);
+                for (Piece p = Piece.FU; p < Piece.OU; p++) {
+                    int n = hand[(byte)p];
+                    if (n <= 0) continue;
+                    if (!appended) {
+                        appended = true;
+                        str.Append(t == 0 ? "P+" : "P-");
+                    }
+                    string name = "00" + PCLNotationReader.ToCSAName(p);
+                    for (int i = 0; i < n; i++) str.Append(name);
+                }
+                if (appended) {
+                    str.Append('\n');
+                }
+            }
+            return str.ToString();
         }
 
         /// <summary>

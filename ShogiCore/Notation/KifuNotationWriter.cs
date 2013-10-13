@@ -85,13 +85,13 @@ namespace ShogiCore.Notation {
                 str.AppendLine("後手：" + notation.SecondPlayerName);
             }
 
+            // 指し手が無ければここまで
+            if (notation.Moves == null || notation.Moves.Length <= 0) return;
+
             // 未実装
             if (mode == Mode.KI2) {
                 throw new NotImplementedException("KI2形式は未実装");
             }
-
-            // 指し手が無ければここまで
-            if (notation.Moves == null || notation.Moves.Length <= 0) return;
 
             str.AppendLine("手数----指手---------消費時間--");
             // 各手の出力
