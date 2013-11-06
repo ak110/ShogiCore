@@ -188,6 +188,11 @@ namespace ShogiCore.USI {
                 }
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
+                try {
+                    process.ProcessorAffinity = Process.GetCurrentProcess().ProcessorAffinity; // プロセッサAffinityを引き継ぐようにしてみる
+                } catch (Exception e) {
+                    logger.Warn("ProcessorAffinityの設定に失敗", e);
+                }
 
                 Send("usi");
                 // usiokまで待つ。(とりあえず適当に最大30秒)
