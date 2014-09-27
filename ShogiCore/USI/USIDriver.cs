@@ -23,6 +23,8 @@ namespace ShogiCore.USI {
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         static readonly log4net.ILog usiLogger = log4net.LogManager.GetLogger("USILogger");
 
+        string engineFileName, engineArguments;
+
         object syncObject = new object();
         Process process = null;
         int processExitCode;
@@ -156,10 +158,20 @@ namespace ShogiCore.USI {
         /// <param name="engineArguments">USIエンジンの引数。nullで無し。将棋所が未対応なのでnullが無難？</param>
         /// <param name="logID">ログ記録用のエンジンのID</param>
         public USIDriver(string engineFileName, string engineArguments = null, int logID = 1) {
+            Options = new List<OptionEntry>();
+            this.engineFileName = engineFileName;
+            this.engineArguments = engineArguments;
+            LogID = logID;
+        }
+
+        /// <summary>
+        /// エンジンの起動
+        /// </summary>
+        public void Start(ProcessPriorityClass pricessPriorityClass = ProcessPriorityClass.Normal) {
             try {
-                Options = new List<OptionEntry>();
+                if (process != null)
+                    return;
                 process = new Process();
-                LogID = logID;
 
                 engineFileName = NormalizeEnginePath(engineFileName);
 
@@ -192,6 +204,11 @@ namespace ShogiCore.USI {
                     process.ProcessorAffinity = Process.GetCurrentProcess().ProcessorAffinity; // プロセッサAffinityを引き継ぐようにしてみる
                 } catch (Exception e) {
                     logger.Warn("ProcessorAffinityの設定に失敗", e);
+                }
+                try {
+                    process.PriorityClass = pricessPriorityClass;
+                } catch (Exception e) {
+                    logger.Warn("PriorityClassの設定に失敗", e);
                 }
 
                 Send("usi");
