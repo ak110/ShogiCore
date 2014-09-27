@@ -57,6 +57,10 @@ namespace ShogiCore {
         /// オプション
         /// </summary>
         public USIOptions Options { get; private set; }
+        /// <summary>
+        /// 秒読みを1秒減らしてエンジンへ送信するならtrue
+        /// </summary>
+        public bool ByoyomiHack { get; set;  }
 
         /// <summary>
         /// CommandReceived
@@ -93,7 +97,6 @@ namespace ShogiCore {
             Driver = driver;
             Driver.CommandReceived += new EventHandler<USICommandEventArgs>(Driver_CommandReceived);
             Driver.InfoReceived += new EventHandler<USIInfoEventArgs>(Driver_InfoReceived);
-            Name = Driver.IdName;
             // オプション。とりあえず適当に入れておく。
             Options = new USIOptions();
             //Options["USI_Ponder"] = "false";
@@ -132,6 +135,8 @@ namespace ShogiCore {
         }
 
         public void GameStart() {
+            Driver.Start();
+            Name = Driver.IdName;
             foreach (KeyValuePair<string, string> p in Options) {
                 Driver.SendSetOption(p.Key, p.Value);
             }
@@ -150,7 +155,7 @@ namespace ShogiCore {
             LastNPS = null;
 
             Driver.SendPosition(board.ToNotation());
-            Driver.SendGo(firstTurnTime, secondTurnTime, byoyomi);
+            Driver.SendGo(firstTurnTime, secondTurnTime, ByoyomiHack ? Math.Max(0, byoyomi - 1000) : byoyomi);
 
             while (true) {
                 USICommand command;
