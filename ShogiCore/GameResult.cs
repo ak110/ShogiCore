@@ -111,7 +111,7 @@ namespace ShogiCore {
                 case GameEndReason.Jishogi: return "持将棋";
                 case GameEndReason.Abort: return "強制中断";
                 case GameEndReason.SameNotation: return "同一棋譜の発生";
-                case GameEndReason.Interruption: return "";
+                case GameEndReason.Interruption: return "中断";
                 case GameEndReason.Matta: return "待った";
                 case GameEndReason.Error: return "エラー";
                 case GameEndReason.Unknown: return "不明";
