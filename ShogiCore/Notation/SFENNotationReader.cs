@@ -107,8 +107,12 @@ namespace ShogiCore.Notation {
                 for (int y = 0; y < 9; y++) {
                     int rank = y + 1;
                     Piece promote = 0;
-                    for (int file = 9, i = 0; 1 <= file; ) {
-                        switch (strB[y][i++]) {
+                    for (int file = 9, i = 0; 1 <= file; i++) {
+                        if (strB[y].Length <= i) {
+                            //throw new NotationFormatException("SFEN棋譜の盤面データの読み込みに失敗しました (3)");
+                            break;
+                        }
+                        switch (strB[y][i]) {
                             case 'P': board[file--, rank] = Piece.FU | promote; promote = 0; break;
                             case 'L': board[file--, rank] = Piece.KY | promote; promote = 0; break;
                             case 'N': board[file--, rank] = Piece.KE | promote; promote = 0; break;
@@ -135,7 +139,7 @@ namespace ShogiCore.Notation {
                             case '7':
                             case '8':
                             case '9': {
-                                    int n = strB[y][i - 1] - '0';
+                                    int n = strB[y][i] - '0';
                                     for (int j = 0; j < n; j++) {
                                         board[file--, rank] = Piece.EMPTY;
                                     }
@@ -143,7 +147,7 @@ namespace ShogiCore.Notation {
                                 }
                                 break;
                             default:
-                                throw new NotationException("SFEN棋譜の盤面データの読み込みに失敗しました (3)");
+                                throw new NotationException("SFEN棋譜の盤面データの読み込みに失敗しました。不正な駒：" + strB[y][i]);
                         }
                     }
                 }
@@ -157,21 +161,21 @@ namespace ShogiCore.Notation {
                     for (int i = 0; i < handStr.Length; i++) {
                         switch (handStr[i]) {
                             case 'P': hand[0][(byte)Piece.FU] += lastNumber; lastNumber = 1; break;
-                            case 'L': hand[0][(byte)Piece.KY] += lastNumber; lastNumber = 1; ; break;
-                            case 'N': hand[0][(byte)Piece.KE] += lastNumber; lastNumber = 1; ; break;
-                            case 'S': hand[0][(byte)Piece.GI] += lastNumber; lastNumber = 1; ; break;
-                            case 'G': hand[0][(byte)Piece.KI] += lastNumber; lastNumber = 1; ; break;
-                            case 'B': hand[0][(byte)Piece.KA] += lastNumber; lastNumber = 1; ; break;
-                            case 'R': hand[0][(byte)Piece.HI] += lastNumber; lastNumber = 1; ; break;
-                            case 'K': hand[0][(byte)Piece.OU] += lastNumber; lastNumber = 1; ; break;
-                            case 'p': hand[1][(byte)Piece.FU] += lastNumber; lastNumber = 1; ; break;
-                            case 'l': hand[1][(byte)Piece.KY] += lastNumber; lastNumber = 1; ; break;
-                            case 'n': hand[1][(byte)Piece.KE] += lastNumber; lastNumber = 1; ; break;
-                            case 's': hand[1][(byte)Piece.GI] += lastNumber; lastNumber = 1; ; break;
-                            case 'g': hand[1][(byte)Piece.KI] += lastNumber; lastNumber = 1; ; break;
-                            case 'b': hand[1][(byte)Piece.KA] += lastNumber; lastNumber = 1; ; break;
-                            case 'r': hand[1][(byte)Piece.HI] += lastNumber; lastNumber = 1; ; break;
-                            case 'k': hand[1][(byte)Piece.OU] += lastNumber; lastNumber = 1; ; break;
+                            case 'L': hand[0][(byte)Piece.KY] += lastNumber; lastNumber = 1; break;
+                            case 'N': hand[0][(byte)Piece.KE] += lastNumber; lastNumber = 1; break;
+                            case 'S': hand[0][(byte)Piece.GI] += lastNumber; lastNumber = 1; break;
+                            case 'G': hand[0][(byte)Piece.KI] += lastNumber; lastNumber = 1; break;
+                            case 'B': hand[0][(byte)Piece.KA] += lastNumber; lastNumber = 1; break;
+                            case 'R': hand[0][(byte)Piece.HI] += lastNumber; lastNumber = 1; break;
+                            case 'K': hand[0][(byte)Piece.OU] += lastNumber; lastNumber = 1; break;
+                            case 'p': hand[1][(byte)Piece.FU] += lastNumber; lastNumber = 1; break;
+                            case 'l': hand[1][(byte)Piece.KY] += lastNumber; lastNumber = 1; break;
+                            case 'n': hand[1][(byte)Piece.KE] += lastNumber; lastNumber = 1; break;
+                            case 's': hand[1][(byte)Piece.GI] += lastNumber; lastNumber = 1; break;
+                            case 'g': hand[1][(byte)Piece.KI] += lastNumber; lastNumber = 1; break;
+                            case 'b': hand[1][(byte)Piece.KA] += lastNumber; lastNumber = 1; break;
+                            case 'r': hand[1][(byte)Piece.HI] += lastNumber; lastNumber = 1; break;
+                            case 'k': hand[1][(byte)Piece.OU] += lastNumber; lastNumber = 1; break;
                             case '1':
                             case '2':
                             case '3':
@@ -190,7 +194,7 @@ namespace ShogiCore.Notation {
                                 }
                                 break;
                             default:
-                                throw new NotationException("SFEN棋譜の持ち駒データの読み込みに失敗しました");
+                                throw new NotationException("SFEN棋譜の持ち駒データの読み込みに失敗しました。不正な持ち駒: " + handStr[i]);
                         }
                     }
                 }
