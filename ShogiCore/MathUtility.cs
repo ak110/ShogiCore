@@ -257,7 +257,8 @@ namespace ShogiCore {
                 // 正な側を基準とする
                 return nm < np ? p : 1 - p;
             } else {
-                return 1.0 - NormSDist((np - N * 0.5) / Math.Sqrt(0.5 * (1.0 - 0.5) * N));
+                double x = (np - N * 0.5) / Math.Sqrt(0.5 * (1.0 - 0.5) * N);
+                return 1.0 - NormSDist(x);
             }
         }
 
@@ -452,6 +453,25 @@ namespace ShogiCore {
 
             // 正な側を基準とする
             return rankSumP < rankSumN ? p : 1 - p;
+        }
+
+        /// <summary>
+        /// 2標本の検定
+        /// </summary>
+        /// <param name="np1">勝った回数（a vs b）</param>
+        /// <param name="nm1">負けた回数（a vs b）</param>
+        /// <param name="np2">勝った回数（a' vs b）</param>
+        /// <param name="nm2">負けた回数（a' vs b）</param>
+        /// <returns>aよりa'が強いか否かの検定の有意確率。（適当表現）</returns>
+        public static double DoubleSignTest(int np1, int nm1, int np2, int nm2) {
+            double N1 = np1 + nm1;
+            double N2 = np2 + nm2;
+            double N = N1 + N2;
+            double p1 = (double)np1 / N1;
+            double p2 = (double)np2 / N2;
+            double p = (double)(np1 + np2) / N;
+            double x = Math.Sqrt((double)(N1 * N2) / N) * (p2 - p1) / Math.Sqrt(p * (1.0 - p));
+            return 1.0 - NormSDist(x);
         }
 
 #if 未実装
