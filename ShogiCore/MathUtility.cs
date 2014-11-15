@@ -247,14 +247,18 @@ namespace ShogiCore {
         /// <param name="nm">値が負の要素数</param>
         /// <returns>片側有意確率。両側なら倍にする。</returns>
         public static double SignTest(int np, int nm) {
-            double p = 0.0; // 片側有意確率
             int N = np + nm;
-            for (int i = 0, m = Math.Min(np, nm); i < m; i++) {
-                p += Combin(N, i);
+            if (N < 1000) { // オーバーフローしそうなところから近似計算に切り替える
+                double p = 0.0; // 片側有意確率
+                for (int i = 0, m = Math.Min(np, nm); i < m; i++) {
+                    p += Combin(N, i);
+                }
+                p /= Math.Pow(2, N);
+                // 正な側を基準とする
+                return nm < np ? p : 1 - p;
+            } else {
+                return 1.0 - NormSDist((np - N * 0.5) / Math.Sqrt(0.5 * (1.0 - 0.5) * N));
             }
-            p = p / Math.Pow(2, N);
-            // 正な側を基準とする
-            return nm < np ? p : 1 - p;
         }
 
         /// <summary>
