@@ -361,17 +361,18 @@ namespace ShogiCore {
         private double? GetMean(IEnumerable<double?> list, double medianThreshold = 0.3) {
             try {
                 // nullを除外して要素数チェック
-                var nps = list.Where(x => x.HasValue).Select(x => x.Value);
-                if (!nps.Any()) return null;
+                var values = list.Where(x => x.HasValue).Select(x => x.Value);
+                if (!values.Any()) return null;
                 // 中央値を求める
-                var npsOrdered = nps.OrderBy(x => x);
-                int c = nps.Count();
+                var npsOrdered = values.OrderBy(x => x);
+                int c = values.Count();
                 double median = c % 2 == 0 ?
                     npsOrdered.Skip(c / 2 - 1).Take(2).Average() :
                     npsOrdered.Skip(c / 2).First();
-                // 中央値から±3割以上離れている値は除外して平均
+                // 中央値から±3割以上離れている値は除外して平均。偶数で中央値付近が無い場合はそのまま平均。
                 double th = median * medianThreshold;
-                return nps.Where(x => Math.Abs(median - x) <= th).Average();
+                var meanValues = values.Where(x => Math.Abs(median - x) <= th);
+                return meanValues.Any() ? meanValues.Average() : values.Average();
             } catch (Exception e) {
                 logger.Warn("平均値算出失敗", e);
                 return null;
