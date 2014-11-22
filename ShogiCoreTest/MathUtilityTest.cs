@@ -1,8 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ShogiCore;
 
-namespace ShogiCoreTest {
+namespace ShogiCore {
     [TestClass]
     public class MathUtilityTest {
         [TestMethod]
