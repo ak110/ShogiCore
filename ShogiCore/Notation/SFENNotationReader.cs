@@ -199,7 +199,11 @@ namespace ShogiCore.Notation {
                     }
                 }
 
-                if (str[strPos++] != "1") Debug.Fail("謎エラー？");
+                // 次の手が何手目かの情報は、あるなら（movesでないなら）スキップ
+                if (strPos < str.Length) {
+                    if (str[strPos] != "moves")
+                        strPos++;
+                }
             }
 
             List<MoveDataEx> moves = new List<MoveDataEx>();

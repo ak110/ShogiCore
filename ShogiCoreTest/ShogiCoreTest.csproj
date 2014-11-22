@@ -51,6 +51,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="MathUtilityTest.cs" />
+    <Compile Include="Notation\SFENNotationReaderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
