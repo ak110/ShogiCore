@@ -74,6 +74,7 @@ namespace ShogiCore.Drawing {
                 if (drawingThread == null) {
                     threadValid = true;
                     drawingThread = new Thread(DrawingThread);
+                    drawingThread.IsBackground = true;
                     drawingThread.Start();
                 }
             }
@@ -83,6 +84,20 @@ namespace ShogiCore.Drawing {
         /// 描画スレッド
         /// </summary>
         private void DrawingThread() {
+            try {
+                try {
+                    DrawingThreadImpl();
+                } catch (Exception e) {
+                    logger.Error("描画スレッドで例外発生", e);
+                }
+            } catch {
+            }
+        }
+
+        /// <summary>
+        /// 描画スレッド
+        /// </summary>
+        private void DrawingThreadImpl() {
             IAsyncResult ar = null;
             while (true) {
                 try {
@@ -107,6 +122,7 @@ namespace ShogiCore.Drawing {
                     }
                     // 次の描画
                     if (IsDisposed) break; // 念のため
+                    GC.KeepAlive(ar);
                     ar = BeginInvoke(new MethodInvoker(() => {
                         try {
                             if (!IsDisposed) {
