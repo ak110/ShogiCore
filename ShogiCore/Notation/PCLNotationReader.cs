@@ -35,7 +35,9 @@ namespace ShogiCore.Notation {
         /// <returns>PieceData.FU ～ PieceData.RY</returns>
         public static Piece FromCSAName(string name) {
             int n = Array.IndexOf(CSANameTable, name);
-            Debug.Assert(0 < n);
+            if (n <= 0) {
+                throw new NotationException("CSA/PCL棋譜データの読み込みに失敗: 駒名=" + name);
+            }
             return (Piece)n;
         }
 
@@ -57,7 +59,6 @@ namespace ShogiCore.Notation {
             try {
                 list = SplitCSAStandard(data);
             } catch (DecoderFallbackException e) {
-                Debug.Fail(e.ToString());
                 throw new NotationFormatException("CSA/PCL棋譜データの読み込みに失敗しました", e);
             }
             foreach (List<string> t in list) {
@@ -138,13 +139,10 @@ namespace ShogiCore.Notation {
             try {
                 return ParseCSAStandard2(lines);
             } catch (IndexOutOfRangeException e) {
-                Debug.Fail(e.ToString());
                 throw new NotationFormatException("CSA/PCL棋譜データの読み込みに失敗しました", e);
             } catch (ArgumentOutOfRangeException e) {
-                Debug.Fail(e.ToString());
                 throw new NotationFormatException("CSA/PCL棋譜データの読み込みに失敗しました", e);
             } catch (NotSupportedException e) {
-                Debug.Fail(e.ToString());
                 throw new NotationFormatException("CSA/PCL棋譜データの読み込みに失敗しました", e);
             }
         }
@@ -156,6 +154,7 @@ namespace ShogiCore.Notation {
             Notation notation = new Notation();
             BoardData board = new BoardData();
             List<MoveDataEx> moves = new List<MoveDataEx>();
+            bool hasAnyData = false;
 
             // CSA棋譜のデフォルトの持ち時間は25分切れ負けとしておく。(選手権ルール)
             notation.TimeA = 25 * 60 * 1000;
@@ -174,6 +173,7 @@ namespace ShogiCore.Notation {
                         } else {
                             throw new NotationException("CSA/PCL棋譜データの読み込みに失敗: 行=" + line);
                         }
+                        hasAnyData = true;
                         break;
 
                     case '$': // 各種棋譜情報
@@ -198,6 +198,7 @@ namespace ShogiCore.Notation {
                                     }
                                 }
                             }
+                            hasAnyData = true;
                         } catch (Exception e) {
                             throw new NotationException("CSA/PCL棋譜データの読み込みに失敗: 行=" + line, e);
                         }
@@ -207,6 +208,7 @@ namespace ShogiCore.Notation {
                         bool equality;
                         ParseInitialBoard(board, line, out equality);
                         notation.InitialBoard = equality ? null : board.Clone();
+                        hasAnyData = true;
                         break;
 
                     case '+':
@@ -217,6 +219,7 @@ namespace ShogiCore.Notation {
                         } else {
                             moves.Add(new MoveDataEx(ParseMoveWithDo(board, line)));
                         }
+                        hasAnyData = true;
                         break;
 
                     case '%':
@@ -245,6 +248,7 @@ namespace ShogiCore.Notation {
                         } else {
                             logger.Warn("未知の特殊手？:" + line);
                         }
+                        hasAnyData = true;
                         break;
 
                     case 'T': // 時間
@@ -254,6 +258,7 @@ namespace ShogiCore.Notation {
                                 var moveData = moves[moves.Count - 1];
                                 moveData.Time = time * 1000; // ミリ秒
                                 moves[moves.Count - 1] = moveData;
+                                hasAnyData = true;
                             } else {
                                 logger.Warn("不正な思考時間？: " + line);
                             }
@@ -279,10 +284,14 @@ namespace ShogiCore.Notation {
                                 moveData.Comment += Environment.NewLine + line.Substring(1);
                             }
                             moves[moves.Count - 1] = moveData;
+                            hasAnyData = true;
                         }
                         break;
                 }
             }
+
+            if (!hasAnyData)
+                throw new NotationFormatException("CSA/PCL棋譜データの読み込みに失敗");
 
             notation.Moves = moves.ToArray();
             return notation;
@@ -369,7 +378,9 @@ namespace ShogiCore.Notation {
                 case '8':
                 case '9': {
                         int rank = line[1] - '0';
-                        Debug.Assert(1 <= rank && rank <= 9);
+                        if (rank < 1 || 9 < rank) {
+                            throw new NotationException("CSA/PCL棋譜データの読み込みに失敗: 行=" + line);
+                        }
                         int i = 2;
                         for (int file = 9; 1 <= file; file--) {
                             switch (line[i]) {
@@ -407,8 +418,9 @@ namespace ShogiCore.Notation {
                                 if (file == 0 && rank == 0) {
                                     board.GetHand(0)[(byte)p]++;
                                 } else {
-                                    Debug.Assert(1 <= rank && rank <= 9);
-                                    Debug.Assert(1 <= file && file <= 9);
+                                    if (file < 1 || 9 < file || rank < 1 || 9 < rank) {
+                                        throw new NotationException("CSA/PCL棋譜データの読み込みに失敗: 行=" + line);
+                                    }
                                     board[file, rank] = p;
                                 }
                             }
@@ -428,8 +440,9 @@ namespace ShogiCore.Notation {
                                 if (file == 0 && rank == 0) {
                                     board.GetHand(1)[(byte)p]++;
                                 } else {
-                                    Debug.Assert(1 <= rank && rank <= 9);
-                                    Debug.Assert(1 <= file && file <= 9);
+                                    if (file < 1 || 9 < file || rank < 1 || 9 < rank) {
+                                        throw new NotationException("CSA/PCL棋譜データの読み込みに失敗: 行=" + line);
+                                    }
                                     board[file, rank] = p | Piece.ENEMY;
                                 }
                             }

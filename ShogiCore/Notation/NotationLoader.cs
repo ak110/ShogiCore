@@ -68,18 +68,13 @@ namespace ShogiCore.Notation {
                     lock (readers[i]) { // 念のため
                         if (!readers[i].CanRead(data)) continue; // 未対応なので次へ。
                         var list = readers[i].Read(data).ToList();
-                        if (list.Count <= 0 ||
-                            (list.Count == 1 && list[0].InitialBoard == null &&
-                            (list[0].Moves == null || list[0].Moves.Length == 0))) {
-                            Debug.WriteLine("有効な棋譜が無いので未対応扱い: " + readers[i].ToString());
-                            continue; // 一応未対応扱い
-                        }
+                        if (list.Count <= 0)
+                            continue; // 未対応扱い
 
                         // 1個以上の有効な棋譜だったらそれを返しておしまい。
                         return list;
                     }
-                } catch (NotationFormatException e) {
-                    Debug.Fail(e.ToString());
+                } catch (NotationFormatException) {
                     continue; // エラーが起きたら未対応扱いとして次へ行くいい加減実装。
                 }
             }
