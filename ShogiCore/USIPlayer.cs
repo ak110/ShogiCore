@@ -204,6 +204,7 @@ namespace ShogiCore {
 
         public void Abort() {
             Driver.SendStop();
+            Driver.Kill();
         }
 
         public void GameEnd(Board board, GameResult result) {

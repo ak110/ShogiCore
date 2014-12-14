@@ -275,21 +275,7 @@ namespace ShogiCore.USI {
             try {
                 lock (syncObject) {
                     if (process != null) {
-                        try {
-                            if (!process.HasExited) {
-                                SendQuit();
-                                process.WaitForExit(5000);
-                            }
-                        } catch (IOException) { // 黙殺。
-                        } catch (InvalidOperationException) { // 黙殺。
-                        }
-                        try {
-                            if (!process.HasExited) {
-                                process.Kill();
-                            }
-                        } catch (InvalidOperationException) {
-                            // 「プロセス ({pid}) が終了したため、要求を処理できません。」とかは黙殺
-                        }
+                        Kill();
                         processExitCode = process.ExitCode;
                         process.Dispose();
                         process = null;
@@ -340,7 +326,7 @@ namespace ShogiCore.USI {
                         }
                     } catch (Exception ex) {
                         logger.Warn("infoコマンド処理中に例外発生: " + command.Parameters, ex);
-                    }break;
+                    } break;
                 case "bestmove":
                     lock (goingLock) {
                         Going = false;
@@ -370,6 +356,27 @@ namespace ShogiCore.USI {
             if (usiLogger.IsDebugEnabled) {
                 string line = (e.Data ?? "").TrimEnd('\r', '\n'); // 念のため末尾に改行っぽいのがあれば削除（適当）
                 usiLogger.Debug(errUSILogPrefix + line);
+            }
+        }
+
+        /// <summary>
+        /// エンジンを止める
+        /// </summary>
+        public void Kill() {
+            try {
+                if (!process.HasExited) {
+                    SendQuit();
+                    process.WaitForExit(5000);
+                }
+            } catch (IOException) { // 黙殺。
+            } catch (InvalidOperationException) { // 黙殺。
+            }
+            try {
+                if (!process.HasExited) {
+                    process.Kill();
+                }
+            } catch (InvalidOperationException) {
+                // 「プロセス ({pid}) が終了したため、要求を処理できません。」とかは黙殺
             }
         }
 
