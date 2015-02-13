@@ -363,6 +363,8 @@ namespace ShogiCore.USI {
         /// エンジンを止める
         /// </summary>
         public void Kill() {
+            if (process == null)
+                return;
             try {
                 if (!process.HasExited) {
                     SendQuit();
@@ -370,13 +372,14 @@ namespace ShogiCore.USI {
                 }
             } catch (IOException) { // 黙殺。
             } catch (InvalidOperationException) { // 黙殺。
+            } catch (NullReferenceException) { // 黙殺。
             }
             try {
                 if (!process.HasExited) {
                     process.Kill();
                 }
-            } catch (InvalidOperationException) {
-                // 「プロセス ({pid}) が終了したため、要求を処理できません。」とかは黙殺
+            } catch (InvalidOperationException) { // 黙殺。
+            } catch (NullReferenceException) { // 黙殺。
             }
         }
 
