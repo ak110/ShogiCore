@@ -41,9 +41,17 @@ namespace ShogiCore {
         /// </summary>
         public string[] LastPV { get; private set; }
         /// <summary>
+        /// info timeコマンドの値。
+        /// </summary>
+        public double? LastTime { get; private set; }
+        /// <summary>
         /// info depthコマンドの値。
         /// </summary>
         public double? LastDepth { get; private set; }
+        /// <summary>
+        /// info nodesコマンドの値。
+        /// </summary>
+        public double? LastNodes { get; private set; }
         /// <summary>
         /// info npsコマンドの値。
         /// </summary>
@@ -80,15 +88,6 @@ namespace ShogiCore {
         public event EventHandler<USIInfoEventArgs> InfoReceived;
 
         /// <summary>
-        /// １対局分の深さのリスト
-        /// </summary>
-        public List<double?> GameDepthList { get; private set; }
-        /// <summary>
-        /// １対局分のNPSのリスト
-        /// </summary>
-        public List<double?> GameNPSList { get; private set; }
-
-        /// <summary>
         /// 初期化
         /// </summary>
         /// <param name="engineFileName">USIエンジンのパス(環境変数利用可能)</param>
@@ -111,8 +110,6 @@ namespace ShogiCore {
             //Options["USI_Hash"] = "32";
             // 念のため初期化
             LastPV = new string[0];
-            GameDepthList = new List<double?>();
-            GameNPSList = new List<double?>();
         }
 
         /// <summary>
@@ -159,7 +156,9 @@ namespace ShogiCore {
             LastScore = 0;
             LastScoreString = "";
             LastPV = new string[0];
+            LastTime = null;
             LastDepth = null;
+            LastNodes = null;
             LastNPS = null;
 
             Driver.SendPosition(board.ToNotation());
@@ -178,9 +177,6 @@ namespace ShogiCore {
 
                 switch (command.Name) {
                     case "bestmove":
-                        GameDepthList.Add(LastDepth);
-                        GameNPSList.Add(LastNPS);
-
                         if (command.Parameters.StartsWith("resign", StringComparison.Ordinal)) {
                             return Move.Resign;
                         } else if (command.Parameters.StartsWith("win", StringComparison.Ordinal)) {
@@ -221,8 +217,6 @@ namespace ShogiCore {
         }
 
         public void GameEnd(Board board, GameResult result) {
-            GameDepthList.Clear();
-            GameNPSList.Clear();
             switch (result) {
                 case GameResult.Win: Driver.SendGameOverWin(); break;
                 case GameResult.Lose: Driver.SendGameOverLose(); break;
@@ -298,13 +292,27 @@ namespace ShogiCore {
 
                     case "pv": LastPV = info.Parameters; break;
 
+                    case "time":
+                        try {
+                            LastTime = double.Parse(info.Parameters.FirstOrDefault().Replace(",", ""));
+                        } catch (Exception ex) {
+                            logger.Debug("timeの解析に失敗: " + info.Parameters.FirstOrDefault(), ex);
+                        }
+                        break;
+
                     case "depth":
                         try {
-                            string s = info.Parameters.FirstOrDefault().Replace(",", "");
-                            LastDepth = double.Parse(s);
+                            LastDepth = double.Parse(info.Parameters.FirstOrDefault().Replace(",", ""));
                         } catch (Exception ex) {
                             logger.Debug("depthの解析に失敗: " + info.Parameters.FirstOrDefault(), ex);
+                        }
+                        break;
 
+                    case "nodes":
+                        try {
+                            LastNodes = double.Parse(info.Parameters.FirstOrDefault().Replace(",", ""));
+                        } catch (Exception ex) {
+                            logger.Debug("nodesの解析に失敗: " + info.Parameters.FirstOrDefault(), ex);
                         }
                         break;
 
@@ -329,67 +337,6 @@ namespace ShogiCore {
             var InfoReceived = this.InfoReceived;
             if (InfoReceived != null) {
                 InfoReceived(sender, e);
-            }
-        }
-
-        /// <summary>
-        /// 全体の深さの平均
-        /// </summary>
-        public double? MeanDepth {
-            get { return GetMean(GameDepthList, 1.0); }
-        }
-        /// <summary>
-        /// 序盤の深さの平均
-        /// </summary>
-        public double? MeanDepthOfOpening {
-            get { return GetMean(GameDepthList.Take(GameDepthList.Count / 2), 1.0); }
-        }
-        /// <summary>
-        /// 終盤の深さの平均
-        /// </summary>
-        public double? MeanDepthOfEndGame {
-            get { return GetMean(GameDepthList.Skip(GameDepthList.Count / 2), 1.0); }
-        }
-        /// <summary>
-        /// 全体のNPSの平均
-        /// </summary>
-        public double? MeanNPS {
-            get { return GetMean(GameNPSList); }
-        }
-        /// <summary>
-        /// 序盤のNPSの平均
-        /// </summary>
-        public double? MeanNPSOfOpening {
-            get { return GetMean(GameNPSList.Take(GameNPSList.Count / 2)); }
-        }
-        /// <summary>
-        /// 終盤のNPSの平均
-        /// </summary>
-        public double? MeanNPSOfEndGame {
-            get { return GetMean(GameNPSList.Skip(GameNPSList.Count / 2)); }
-        }
-
-        /// <summary>
-        /// 平均を算出。特異値の影響を避けるために中央値からmedianThreshold以上外れているものは除外して平均。
-        /// </summary>
-        private double? GetMean(IEnumerable<double?> list, double medianThreshold = 0.3) {
-            try {
-                // nullを除外して要素数チェック
-                var values = list.Where(x => x.HasValue).Select(x => x.Value);
-                if (!values.Any()) return null;
-                // 中央値を求める
-                var npsOrdered = values.OrderBy(x => x);
-                int c = values.Count();
-                double median = c % 2 == 0 ?
-                    npsOrdered.Skip(c / 2 - 1).Take(2).Average() :
-                    npsOrdered.Skip(c / 2).First();
-                // 中央値から±3割以上離れている値は除外して平均。偶数で中央値付近が無い場合はそのまま平均。
-                double th = median * medianThreshold;
-                var meanValues = values.Where(x => Math.Abs(median - x) <= th);
-                return meanValues.Any() ? meanValues.Average() : values.Average();
-            } catch (Exception e) {
-                logger.Warn("平均値算出失敗", e);
-                return null;
             }
         }
     }
