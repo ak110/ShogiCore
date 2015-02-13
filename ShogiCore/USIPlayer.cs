@@ -61,6 +61,14 @@ namespace ShogiCore {
         /// 秒読みを1秒減らしてエンジンへ送信するならtrue
         /// </summary>
         public bool ByoyomiHack { get; set;  }
+        /// <summary>
+        /// go depthする場合は設定する
+        /// </summary>
+        public int? GoDepth { get; set; }
+        /// <summary>
+        /// go nodesする場合は設定する
+        /// </summary>
+        public long? GoNodes { get; set; }
 
         /// <summary>
         /// CommandReceived
@@ -155,7 +163,12 @@ namespace ShogiCore {
             LastNPS = null;
 
             Driver.SendPosition(board.ToNotation());
-            Driver.SendGo(firstTurnTime, secondTurnTime, ByoyomiHack ? Math.Max(0, byoyomi - 1000) : byoyomi);
+            if (GoDepth.HasValue)
+                Driver.SendGoDepth(GoDepth.Value);
+            else if (GoNodes.HasValue)
+                Driver.SendGoNodes(GoNodes.Value);
+            else
+                Driver.SendGo(firstTurnTime, secondTurnTime, ByoyomiHack ? Math.Max(0, byoyomi - 1000) : byoyomi);
 
             while (true) {
                 USICommand command;

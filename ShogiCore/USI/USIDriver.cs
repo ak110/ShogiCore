@@ -529,6 +529,26 @@ namespace ShogiCore.USI {
                 Send("go infinite");
             }
         }
+        /// <summary>
+        /// 深さ指定で思考させる
+        /// </summary>
+        /// <param name="depth">深さ</param>
+        public void SendGoDepth(int depth) {
+            lock (goingLock) {
+                Going = true;
+                Send("go depth " + depth.ToString());
+            }
+        }
+        /// <summary>
+        /// ノード数指定で思考させる
+        /// </summary>
+        /// <param name="nodes">ノード数</param>
+        public void SendGoNodes(long nodes) {
+            lock (goingLock) {
+                Going = true;
+                Send("go nodes " + nodes.ToString());
+            }
+        }
 
         /// <summary>
         /// 詰将棋解答を開始する時に使います。
