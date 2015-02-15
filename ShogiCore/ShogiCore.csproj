@@ -92,7 +92,7 @@
     <Compile Include="IO\IOUtility.cs" />
     <Compile Include="IO\UnsafeMemoryReadStream.cs" />
     <Compile Include="IO\WinFile.cs" />
-    <Compile Include="LinqEmu.cs" />
+    <Compile Include="Linq\MathEnumerable.cs" />
     <Compile Include="ManualProfiler.cs" />
     <Compile Include="MathUtility.cs" />
     <Compile Include="Move.cs" />
