@@ -199,6 +199,7 @@ namespace ShogiCore.CSA {
         /// </summary>
         private void OpenConnection() {
             client = new TcpClient();
+            client.NoDelay = true;
 
             try {
                 // TCPのKeepAlive。Windows限定な気がする。http://d.hatena.ne.jp/ak11/20101204
