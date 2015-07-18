@@ -216,7 +216,7 @@ namespace ShogiCore {
             Driver.Kill();
         }
 
-        public void GameEnd(Board board, GameResult result) {
+        public void GameEnd(GameResult result) {
             switch (result) {
                 case GameResult.Win: Driver.SendGameOverWin(); break;
                 case GameResult.Lose: Driver.SendGameOverLose(); break;

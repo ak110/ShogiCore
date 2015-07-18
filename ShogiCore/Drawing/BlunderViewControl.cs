@@ -121,14 +121,13 @@ namespace ShogiCore.Drawing {
                         }
                     }
                     // 次の描画
-                    if (IsDisposed) break; // 念のため
+                    if (!Created || IsDisposed) break; // 念のため
                     GC.KeepAlive(ar);
                     ar = BeginInvoke(new MethodInvoker(() => {
                         try {
-                            if (!IsDisposed) {
-                                Invalidate();
-                                Update();
-                            }
+                            if (!Created || !IsDisposed) return;
+                            Invalidate();
+                            Update();
                         } catch {
                         }
                     }));

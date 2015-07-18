@@ -38,6 +38,6 @@ namespace ShogiCore {
         /// <summary>
         /// 対局終了
         /// </summary>
-        void GameEnd(Board board, GameResult result);
+        void GameEnd(GameResult result);
     }
 }

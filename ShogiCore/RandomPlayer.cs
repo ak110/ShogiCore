@@ -39,7 +39,7 @@ namespace ShogiCore {
         public void Abort() {
         }
 
-        public void GameEnd(Board board, GameResult result) {
+        public void GameEnd(GameResult result) {
         }
 
         #endregion
