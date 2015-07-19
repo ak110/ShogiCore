@@ -2,4 +2,6 @@
 */bin
 */obj
 */*.user
+
 !.nuget/*
+packages/*
