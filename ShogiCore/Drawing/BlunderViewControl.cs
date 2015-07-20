@@ -125,7 +125,7 @@ namespace ShogiCore.Drawing {
                     GC.KeepAlive(ar);
                     ar = BeginInvoke(new MethodInvoker(() => {
                         try {
-                            if (!Created || !IsDisposed) return;
+                            if (!Created || IsDisposed) return;
                             Invalidate();
                             Update();
                         } catch {
