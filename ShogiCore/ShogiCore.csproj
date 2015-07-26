@@ -140,9 +140,6 @@
     <Compile Include="Toolkit\IO\Zip.cs" />
     <Compile Include="Toolkit\MersenneTwister.cs" />
     <Compile Include="Toolkit\ProgressDisplay.cs" />
-    <Compile Include="UnsafeMemory.cs" />
-    <Compile Include="UnsafeMemoryAssignor.cs" />
-    <Compile Include="UnsafeMemoryStaticBlock.cs" />
     <Compile Include="USIPlayer.cs" />
     <Compile Include="USI\USIClient.cs" />
     <Compile Include="USI\USIClientState.cs" />
