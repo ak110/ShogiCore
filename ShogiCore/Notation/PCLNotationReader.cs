@@ -266,6 +266,12 @@ namespace ShogiCore.Notation {
                         break;
 
                     case '\'': // コメント
+                        if (line.StartsWith("'$")) {
+                            // 「'$END_TIME:2015/07/18 19:13:27」など用
+                            string[] sp = line.Split(new[] { ':' }, 2);
+                            if (sp.Length == 2)
+                                notation.AdditionalInfo[sp[0].Substring(1)] = sp[1];
+                        }
                         if (0 < moves.Count) {
                             var moveData = moves[moves.Count - 1];
                             if (string.IsNullOrEmpty(moveData.Comment)) {
@@ -278,6 +284,7 @@ namespace ShogiCore.Notation {
                                     int value;
                                     if (int.TryParse(moveData.Comment.Substring(3, n - 3), out value)) {
                                         moveData.Value = value;
+                                        moveData.PV = moveData.Comment.Substring(n + 1);
                                     }
                                 }
                             } else {

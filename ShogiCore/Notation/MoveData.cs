@@ -204,6 +204,10 @@ namespace ShogiCore.Notation {
         /// </summary>
         public int? Value;
         /// <summary>
+        /// PV(棋譜の中身そのまま)
+        /// </summary>
+        public string PV;
+        /// <summary>
         /// 思考時間[ms]。負なら思考時間未記録とする。
         /// </summary>
         public int Time;
@@ -211,10 +215,11 @@ namespace ShogiCore.Notation {
         /// <summary>
         /// 初期化
         /// </summary>
-        public MoveDataEx(MoveData moveData, string comment = null, int? value = null, int? time = null) {
+        public MoveDataEx(MoveData moveData, string comment = null, int? value = null, string pv = null, int? time = null) {
             MoveData = moveData;
             Comment = comment;
             Value = value;
+            PV = pv;
             Time = time.HasValue ? time.Value : - 1;
         }
     }
