@@ -46,9 +46,7 @@ namespace ShogiCore.Notation {
         /// </summary>
         public override bool CanRead(string data) {
             return data != null &&
-                0 <= data.IndexOf('P') &&
-                (0 <= data.IndexOf('+') || 0 <= data.IndexOf('-'));
-            // ↑適当 (´ω`)
+                (data.StartsWith("V") || data.Contains("N+") || data.Contains("N-"));
         }
 
         /// <summary>
