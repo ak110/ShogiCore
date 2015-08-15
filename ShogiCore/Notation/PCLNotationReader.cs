@@ -284,7 +284,9 @@ namespace ShogiCore.Notation {
                                     int value;
                                     if (int.TryParse(moveData.Comment.Substring(3, n - 3), out value)) {
                                         moveData.Value = value;
-                                        moveData.PV = moveData.Comment.Substring(n + 1);
+                                        moveData.PV =
+                                            n == moveData.Comment.Length ? "" :
+                                            moveData.Comment.Substring(n + 1);
                                     }
                                 }
                             } else {
