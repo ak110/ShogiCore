@@ -51,6 +51,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="BoardTest.cs" />
     <Compile Include="MathUtilityTest.cs" />
     <Compile Include="Notation\SFENNotationReaderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

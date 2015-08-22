@@ -177,7 +177,7 @@ namespace ShogiCore {
             get {
                 if ((Value & MaskFromTo) == (0xff << ShiftTo)) {
                     Debug.Assert(
-                        this == Pass || this == Resign ||
+                        this == Pass || this == Resign || this == Win ||
                         this == Endless || this == Perpetual);
                     return true;
                 }

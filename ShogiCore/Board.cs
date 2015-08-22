@@ -1271,12 +1271,12 @@ namespace ShogiCore {
         /// </summary>
         public bool IsMateFast() {
             Debug.Assert(Checked, "Board.IsMate()で非王手");
-            // *
+            /*
             bool mate = InternalIsMate();
             Debug.Assert(mate == (GetMovesSafe().Count <= 0), "Board.IsMateFast()の実装バグ？");
             return mate;
             /*/
-            return (GetMoves().Count <= 0);
+            return (GetMovesSafe().Count <= 0);
             // */
         }
 
