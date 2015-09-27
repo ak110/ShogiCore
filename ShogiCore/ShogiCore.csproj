@@ -86,6 +86,9 @@
       <DependentUpon>BlunderViewControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Drawing\Resources.Designer.cs" />
+    <Compile Include="EngineStatisticsForAllGames.cs" />
+    <Compile Include="EngineStatisticsForGame.cs" />
+    <Compile Include="GameMeanValue.cs" />
     <Compile Include="GameResult.cs" />
     <Compile Include="GameStatistics.cs" />
     <Compile Include="GenerateCheckTable.cs" />
