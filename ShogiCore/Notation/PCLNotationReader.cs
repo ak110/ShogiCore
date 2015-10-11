@@ -225,26 +225,35 @@ namespace ShogiCore.Notation {
                             notation.Winner = moves.Count % 2 == 0 ? 1 : 0;
                         } else if (line.StartsWith("%CHUDAN", StringComparison.Ordinal)) { // 中断
                             notation.Winner = -1;
+                            notation.Abnormal = true;
                         } else if (line.StartsWith("%SENNICHITE", StringComparison.Ordinal)) { // 千日手
                             notation.Winner = -1;
                         } else if (line.StartsWith("%TIME_UP", StringComparison.Ordinal)) { // 時間切れ(手番側の時間切れ)
                             notation.Winner = moves.Count % 2 == 0 ? 1 : 0;
+                            notation.Abnormal = true;
                         } else if (line.StartsWith("%ILLEGAL_MOVE", StringComparison.Ordinal)) { // 反則負け(手番側の反則負け、反則の内容はコメントで記録可能) 
                             notation.Winner = moves.Count % 2 == 0 ? 1 : 0;
+                            notation.Abnormal = true;
                         } else if (line.StartsWith("%JISHOGI", StringComparison.Ordinal)) { // 持将棋
                             notation.Winner = -1;
                         } else if (line.StartsWith("%KACHI", StringComparison.Ordinal)) { // (入玉で)勝ちの宣言
                             notation.Winner = moves.Count % 2 == 0 ? 0 : 1;
                         } else if (line.StartsWith("%HIKIWAKE", StringComparison.Ordinal)) { // (入玉で)引き分けの宣言
                             notation.Winner = -1;
+                            notation.Abnormal = true;
                         } else if (line.StartsWith("%MATTA", StringComparison.Ordinal)) { // 待った
+                            notation.Abnormal = true;
                         } else if (line.StartsWith("%TSUMI", StringComparison.Ordinal)) { // 詰み
                             notation.Winner = moves.Count % 2 == 0 ? 1 : 0;
+                            notation.Abnormal = true;
                         } else if (line.StartsWith("%FUZUMI", StringComparison.Ordinal)) { // 不詰
+                            notation.Abnormal = true;
                         } else if (line.StartsWith("%ERROR", StringComparison.Ordinal)) { // エラー
                             notation.Winner = -1; // ?
+                            notation.Abnormal = true;
                         } else {
                             logger.Warn("未知の特殊手？:" + line);
+                            notation.Abnormal = true;
                         }
                         hasAnyData = true;
                         break;

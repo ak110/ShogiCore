@@ -39,6 +39,10 @@ namespace ShogiCore.Notation {
         /// </summary>
         public int Winner { get; set; }
         /// <summary>
+        /// 正常に終了しなかった対局はtrue。時間切れや非合法手などもtrueにしておく。
+        /// </summary>
+        public bool Abnormal { get; set; }
+        /// <summary>
         /// 棋譜のタイトル(作品名など)
         /// </summary>
         public string Title { get; set; }
