@@ -552,6 +552,23 @@ namespace ShogiCore.USI {
                 Send("go nodes " + nodes.ToString());
             }
         }
+        /// <summary>
+        /// go ponderを送る
+        /// </summary>
+        public void SendGoPonder() {
+            lock (goingLock) {
+                Going = true;
+                Send("go ponder");
+            }
+        }
+
+        /// <summary>
+        /// ponderhitを送る
+        /// </summary>
+        public void SendPonderHit() {
+            Debug.Assert(Going);
+            Send("ponderhit");
+        }
 
         /// <summary>
         /// 詰将棋解答を開始する時に使います。

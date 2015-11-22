@@ -56,6 +56,14 @@ namespace ShogiCore {
         /// info npsコマンドの値。
         /// </summary>
         public double? LastNPS { get; private set; }
+        /// <summary>
+        /// 前回のbestmoveのponderの指し手（存在する場合）
+        /// </summary>
+        public string LastPonderMove { get; private set; }
+        /// <summary>
+        /// ponder中ならtrue
+        /// </summary>
+        public bool IsPondering { get; private set; }
 
         /// <summary>
         /// USIDriver
@@ -151,7 +159,10 @@ namespace ShogiCore {
             Driver.SendUSINewGame();
         }
 
-        public Move DoTurn(Board board, int firstTurnTime, int secondTurnTime, int byoyomi) {
+        /// <summary>
+        /// 初期化
+        /// </summary>
+        private void InitializeBeforeGo() {
             HasScore = false;
             LastScore = 0;
             LastScoreString = "";
@@ -160,7 +171,30 @@ namespace ShogiCore {
             LastDepth = null;
             LastNodes = null;
             LastNPS = null;
+        }
 
+        public Move DoTurn(Board board, int firstTurnTime, int secondTurnTime, int byoyomi) {
+            // go ponder中なら相手の指し手が一致しているかチェックして適当に処理
+            if (IsPondering) {
+                var lastMoveSfen = SFENNotationWriter.ToString(board.GetLastMove().ToNotation());
+                if (lastMoveSfen == LastPonderMove) {
+                    logger.Debug("ponder成功");
+                    Driver.SendPonderHit();
+                    goto WaitForBestMove;
+                } else {
+                    logger.Debug("ponder失敗");
+                    Driver.SendStop();
+                    if (!Driver.WaitFor(30000, x => x.Name == "bestmove"))
+                        logger.Warn("ponderに対するstopでbestmoveが未着");
+                }
+            }
+
+            // 初期化
+            InitializeBeforeGo();
+            IsPondering = false;
+            LastPonderMove = null;
+
+            // 局面送って思考開始
             Driver.SendPosition(board.ToNotation());
             if (GoDepth.HasValue)
                 Driver.SendGoDepth(GoDepth.Value);
@@ -169,22 +203,23 @@ namespace ShogiCore {
             else
                 Driver.SendGo(firstTurnTime, secondTurnTime, ByoyomiHack ? Math.Max(0, byoyomi - 1000) : byoyomi);
 
-            while (true) {
+            WaitForBestMove:
+            while (true)
+            {
                 USICommand command;
-                if (!Driver.TryReceiveCommand(Timeout.Infinite, out command)) {
+                if (!Driver.TryReceiveCommand(Timeout.Infinite, out command))
                     return Move.Resign;
-                }
 
                 switch (command.Name) {
                     case "bestmove":
-                        if (command.Parameters.StartsWith("resign", StringComparison.Ordinal)) {
+                        if (command.Parameters.StartsWith("resign", StringComparison.Ordinal))
                             return Move.Resign;
-                        } else if (command.Parameters.StartsWith("win", StringComparison.Ordinal)) {
+                        else if (command.Parameters.StartsWith("win", StringComparison.Ordinal))
                             return Move.Win;
-                        } else if (command.Parameters.StartsWith("pass", StringComparison.Ordinal)) {
+                        else if (command.Parameters.StartsWith("pass", StringComparison.Ordinal))
                             return Move.Pass;
-                        }
-                        string sfenMove = command.Parameters.Split(new[] { ' ' }, 2)[0]; // ponderとかは無視！
+                        var @params = command.Parameters.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        string sfenMove = @params[0];
                         // PVと一致した指し手かどうかチェック
                         if (0 < LastPV.Length && LastPV[0] != sfenMove) {
                             // 一致してなければ無効にしてしまう
@@ -193,22 +228,15 @@ namespace ShogiCore {
                             LastScore = 0;
                             LastScoreString = "";
                         }
+                        // ponder
+                        if (3 <= @params.Length && @params[1] == "ponder")
+                            LastPonderMove = @params[2];
                         // 指し手を解析
                         Move move = Move.FromNotation(board, SFENNotationReader.ToMoveData(sfenMove));
                         return move;
-                    // bestmove以外のコマンドはスルー
+                        // bestmove以外のコマンドはスルー
                 }
             }
-
-            /* 例↓
-> position startpos
-> go btime 0 wtime 0 byoyomi 100
-< info string EvaluationTable: log.08-12-28,182906,J=4.967: n=8000 w=0.00030 tx=100 !bad !op opea=10
-< info string TimeControl=Nodes
-< info depth 0 nodes 2445 score cp 0 pv 2g2f
-< info depth 0 nodes 25206 score cp 0 pv 7g7f
-< bestmove 2g2f
-             */
         }
 
         public void Abort() {
@@ -217,6 +245,12 @@ namespace ShogiCore {
         }
 
         public void GameEnd(GameResult result) {
+            if (IsPondering) {
+                Driver.SendStop();
+                IsPondering = false;
+                if (!Driver.WaitFor(30000, x => x.Name == "bestmove"))
+                    logger.Warn("ponderに対するstopでbestmoveが未着");
+            }
             switch (result) {
                 case GameResult.Win: Driver.SendGameOverWin(); break;
                 case GameResult.Lose: Driver.SendGameOverLose(); break;
@@ -226,6 +260,27 @@ namespace ShogiCore {
         }
 
         #endregion
+
+        /// <summary>
+        /// ponderを開始する。
+        /// </summary>
+        /// <remarks>
+        /// DoTurn内に完全に隠蔽することも可能だが、よりシビアなタイミングで呼び出したり、
+        /// ponderしなかったりする場合を考慮していちいち呼ばないとやらないように作っておく。
+        /// </remarks>
+        public void StartPonder(Board board) {
+            if (string.IsNullOrEmpty(LastPonderMove))
+                return;
+            logger.Debug("ponder開始");
+            var notation = board.ToNotation();
+            notation.Moves = Enumerable.Concat(notation.Moves,
+                new[] { new MoveDataEx(SFENNotationReader.ToMoveData(LastPonderMove)) })
+                .ToArray();
+            InitializeBeforeGo();
+            IsPondering = true;
+            Driver.SendPosition(notation);
+            Driver.SendGoPonder();
+        }
 
         /// <summary>
         /// コマンド受信時の処理
