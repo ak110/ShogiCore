@@ -152,9 +152,9 @@ namespace ShogiCore {
                 Name = Driver.IdName;
                 foreach (KeyValuePair<string, string> p in Options)
                     Driver.SendSetOption(p.Key, p.Value);
-                if (!Driver.WaitForReadyOK(30000))
-                    throw new ApplicationException("USIエンジンからの応答がありませんでした。");
             }
+            if (!Driver.WaitForReadyOK(30000))
+                throw new ApplicationException("USIエンジンからの応答がありませんでした。");
             Driver.SendUSINewGame();
         }
 
@@ -178,13 +178,15 @@ namespace ShogiCore {
                 var lastMoveSfen = SFENNotationWriter.ToString(board.GetLastMove().ToNotation());
                 if (lastMoveSfen == LastPonderMove) {
                     logger.Debug("ponder成功");
+                    IsPondering = false;
+                    LastPonderMove = null;
                     Driver.SendPonderHit();
                     goto WaitForBestMove;
                 } else {
                     logger.Debug("ponder失敗");
                     Driver.SendStop();
                     if (!Driver.WaitFor(30000, x => x.Name == "bestmove"))
-                        logger.Warn("ponderに対するstopでbestmoveが未着");
+                        logger.Warn("ponderに対するstopでbestmoveが未着 (1)");
                 }
             }
 
@@ -246,9 +248,9 @@ namespace ShogiCore {
         public void GameEnd(GameResult result) {
             if (IsPondering) {
                 Driver.SendStop();
-                IsPondering = false;
                 if (!Driver.WaitFor(30000, x => x.Name == "bestmove"))
-                    logger.Warn("ponderに対するstopでbestmoveが未着");
+                    logger.Warn("ponderに対するstopでbestmoveが未着  (2)");
+                IsPondering = false;
             }
             switch (result) {
                 case GameResult.Win: Driver.SendGameOverWin(); break;
