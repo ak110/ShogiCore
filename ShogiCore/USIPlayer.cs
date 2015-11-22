@@ -148,13 +148,12 @@ namespace ShogiCore {
         }
 
         public void GameStart() {
-            Driver.Start();
-            Name = Driver.IdName;
-            foreach (KeyValuePair<string, string> p in Options) {
-                Driver.SendSetOption(p.Key, p.Value);
-            }
-            if (!Driver.WaitForReadyOK(30000)) {
-                throw new ApplicationException("USIエンジンからの応答がありませんでした。");
+            if (Driver.Start()) {
+                Name = Driver.IdName;
+                foreach (KeyValuePair<string, string> p in Options)
+                    Driver.SendSetOption(p.Key, p.Value);
+                if (!Driver.WaitForReadyOK(30000))
+                    throw new ApplicationException("USIエンジンからの応答がありませんでした。");
             }
             Driver.SendUSINewGame();
         }

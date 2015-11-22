@@ -167,10 +167,11 @@ namespace ShogiCore.USI {
         /// <summary>
         /// エンジンの起動
         /// </summary>
-        public void Start(ProcessPriorityClass pricessPriorityClass = ProcessPriorityClass.Normal) {
+        /// <returns>true:起動した、false:起動済み</returns>
+        public bool Start(ProcessPriorityClass pricessPriorityClass = ProcessPriorityClass.Normal) {
             try {
                 if (process != null)
-                    return;
+                    return false;
                 process = new Process();
 
                 engineFileName = NormalizeEnginePath(engineFileName);
@@ -227,6 +228,7 @@ namespace ShogiCore.USI {
                 })) {
                     throw new ApplicationException("USIエンジンの起動に失敗(usiok受信失敗): " + engineFileName + " " + engineArguments);
                 }
+                return true;
             } catch (Exception e) {
                 logger.Error("USIエンジンの起動に失敗: " + engineFileName + " " + engineArguments, e);
                 Dispose();
