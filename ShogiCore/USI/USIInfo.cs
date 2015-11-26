@@ -45,6 +45,15 @@ namespace ShogiCore.USI {
             var inputList = input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries); // 2個以上の空白は無視しちゃう(例えinfo stringの中でも1個扱いにしちゃう)
             for (int i = 0; i < inputList.Length; i++) {
                 switch (inputList[i]) {
+                    case "lowerbound":
+                    case "upperbound":
+                        // オプション無しなもの。
+                        list.Add(new USIInfo() {
+                            Name = inputList[i],
+                            Parameters = new string[] { },
+                        });
+                        break;
+
                     case "depth":
                     case "seldepth":
                     case "time":
@@ -52,6 +61,9 @@ namespace ShogiCore.USI {
                     case "nps":
                     case "currmove":
                     case "hashfull":
+                    case "multipv":
+                    case "currmovenumber":
+                    case "cpuload":
                         // オプション1個なもの。
                         list.Add(new USIInfo() {
                             Name = inputList[i],
@@ -61,6 +73,8 @@ namespace ShogiCore.USI {
                         break;
 
                     case "score":
+                    case "refutation":
+                    case "currline":
                         // オプション2個なもの。
                         list.Add(new USIInfo() {
                             Name = inputList[i],
