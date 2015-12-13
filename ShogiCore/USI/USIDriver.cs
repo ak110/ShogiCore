@@ -355,9 +355,9 @@ namespace ShogiCore.USI {
         /// 標準エラー
         /// </summary>
         void process_ErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            if (usiLogger.IsDebugEnabled) {
+            if (usiLogger.IsInfoEnabled) {
                 string line = (e.Data ?? "").TrimEnd('\r', '\n'); // 念のため末尾に改行っぽいのがあれば削除（適当）
-                usiLogger.Debug(errUSILogPrefix + line);
+                usiLogger.Info(errUSILogPrefix + line);
             }
         }
 
