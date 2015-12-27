@@ -148,7 +148,11 @@ namespace ShogiCore {
         }
 
         public void GameStart() {
-            if (Driver.Start()) {
+            GameStart(ProcessPriorityClass.Normal);
+        }
+
+        public void GameStart(ProcessPriorityClass pricessPriorityClass) {
+            if (Driver.Start(pricessPriorityClass)) {
                 Name = Driver.IdName;
                 foreach (KeyValuePair<string, string> p in Options)
                     Driver.SendSetOption(p.Key, p.Value);
