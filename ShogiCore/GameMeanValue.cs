@@ -18,6 +18,7 @@ namespace ShogiCore {
         public struct ResultValues {
             public double? MeanOfAll { get; set; }
             public double? MeanOfOpening { get; set; }
+            public double? MeanOfMidGame { get; set; }
             public double? MeanOfEndGame { get; set; }
         }
 
@@ -48,8 +49,9 @@ namespace ShogiCore {
         public void Calculate() {
             Result = new ResultValues {
                 MeanOfAll = GetMean(Values),
-                MeanOfOpening = GetMean(Values.Take(Values.Count / 2)),
-                MeanOfEndGame = GetMean(Values.Skip(Values.Count / 2)),
+                MeanOfOpening = GetMean(Values.Take(Values.Count * 1 / 3)),
+                MeanOfMidGame = GetMean(Values.Skip(Values.Count * 1 / 3).Take(Values.Count * 1 / 3)),
+                MeanOfEndGame = GetMean(Values.Skip(Values.Count * 2 / 3)),
             };
         }
 

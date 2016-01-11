@@ -36,6 +36,23 @@ namespace ShogiCore {
                     return sum / count;
                 }
             }
+
+            /// <summary>
+            /// formatで文字列化
+            /// </summary>
+            public string ToString(string format) {
+                var m = Mean;
+                return m.HasValue ? m.Value.ToString(format) : "-";
+            }
+
+            /// <summary>
+            /// 比率を有効数字3桁で返す
+            /// </summary>
+            public string RateToString(MeanValue org) {
+                var m = Mean;
+                var o = org.Mean;
+                return m.HasValue && o.HasValue && o.Value != 0 ? (m.Value / o.Value).ToString("G3") : "-";
+            }
         }
         /// <summary>
         /// 全体、序盤、終盤の平均値を算出するためのクラス
@@ -43,15 +60,25 @@ namespace ShogiCore {
         public class MeanValueSet {
             public readonly MeanValue All = new MeanValue();
             public readonly MeanValue Opening = new MeanValue();
+            public readonly MeanValue MidGame = new MeanValue();
             public readonly MeanValue EndGame = new MeanValue();
             /// <summary>
             /// 値を追加
             /// </summary>
-            /// <param name="result"></param>
             public void Add(GameMeanValue.ResultValues result) {
                 All.Add(result.MeanOfAll);
                 Opening.Add(result.MeanOfOpening);
+                MidGame.Add(result.MeanOfMidGame);
                 EndGame.Add(result.MeanOfEndGame);
+            }
+            /// <summary>
+            /// 文字列化
+            /// </summary>
+            public string ToString(string format) {
+                return "全体=" + All.ToString(format) +
+                    " 比率(序盤～終盤)=" + Opening.RateToString(All) +
+                    "/" + MidGame.RateToString(All) +
+                    "/" + EndGame.RateToString(All);
             }
         }
 
@@ -70,6 +97,15 @@ namespace ShogiCore {
             Depth.Add(stat.Depth.Result);
             Nodes.Add(stat.Nodes.Result);
             NPS.Add(stat.NPS.Result);
+        }
+
+        public override string ToString() {
+            return
+                "通算平均時間(実測)：" + TimeReal.ToString("#,##0") + Environment.NewLine +
+                "通算平均時間(USI)： " + TimeUSI.ToString("#,##0") + Environment.NewLine +
+                "通算平均深さ：      " + Depth.ToString("0.0") + Environment.NewLine +
+                "通算平均ノード数：  " + Nodes.ToString("#,##0") + Environment.NewLine +
+                "通算平均NPS：       " + NPS.ToString("#,##0");
         }
     }
 }
