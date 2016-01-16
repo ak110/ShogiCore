@@ -37,7 +37,7 @@ namespace ShogiCore {
 
             Assert.IsFalse(playerTime.Consume(ngTime));
             Assert.IsTrue(playerTime.Consume(ngTime - 1));
-            Assert.AreEqual(nextTime, playerTime.RemainTime);
+            Assert.AreEqual(nextTime, playerTime.Remain);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace ShogiCore {
         public void ConsumeTest2() {
             var playerTime = new PlayerTime();
             playerTime.Unit = 500;
-            playerTime.RemainTime = 1000;
+            playerTime.Remain = 1000;
             playerTime.Byoyomi = 500;
             playerTime.Increment = 1234;
             // 持ち時間+秒読みを超えるとNG
@@ -55,10 +55,22 @@ namespace ShogiCore {
             // ぎりぎりOK
             Assert.IsTrue(playerTime.Consume(1499));
             // 持ち時間が尽きたけどIncrementの分増える
-            Assert.AreEqual(playerTime.RemainTime, 1234);
+            Assert.AreEqual(playerTime.Remain, 1234);
             // TimeUnit未満は消費無し
             Assert.IsTrue(playerTime.Consume(499));
-            Assert.AreEqual(playerTime.RemainTime, 1234 * 2);
+            Assert.AreEqual(playerTime.Remain, 1234 * 2);
+        }
+
+        [TestMethod]
+        public void ToStringTest() {
+            var playerTime = new PlayerTime();
+            playerTime.Unit = 500;
+            playerTime.Total= 10000;
+            playerTime.Remain = 1000;
+            playerTime.Byoyomi = 500;
+            playerTime.Increment = 1234;
+            playerTime.Delay = 100;
+            Assert.AreEqual("単位=0.5,持ち=10,残り=1,秒読み=0.5,加算=1.234,遅延=0.1", playerTime.ToString());
         }
     }
 }

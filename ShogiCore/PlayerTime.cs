@@ -30,26 +30,50 @@ namespace ShogiCore {
         /// </summary>
         public int Byoyomi { get; set; }
         /// <summary>
-        /// 遅延時間[ms]
-        /// </summary>
-        public int Delay { get; set; }
-        /// <summary>
         /// 加算時間[ms]
         /// </summary>
         public int Increment { get; set; }
+        /// <summary>
+        /// 遅延時間[ms]
+        /// </summary>
+        public int Delay { get; set; }
 
         /// <summary>
         /// 残り持ち時間[ms]
         /// </summary>
-        public int RemainTime { get; set; }
+        public int Remain { get; set; }
 
         /// <summary>
         /// 適当に無難な初期値を設定する
         /// </summary>
         public PlayerTime() {
             Unit = 1000;
-            //LeastTimePerMove = 0;
-            //TimeRoundup = false;
+            //LeastPerMove = 0;
+            //Roundup = false;
+        }
+
+        /// <summary>
+        /// 文字列化
+        /// </summary>
+        public override string ToString() {
+            var list = new List<string>();
+            if (Unit != 1000)
+                list.Add("単位=" + (Unit / 1000.0).ToString());
+            if (LeastPerMove != 0)
+                list.Add("最小=" + (LeastPerMove / 1000.0).ToString());
+            if (Roundup)
+                list.Add("切り上げあり");
+            if (Total != 0)
+                list.Add("持ち=" + (Total / 1000.0).ToString());
+            if (Remain != 0)
+                list.Add("残り=" + (Remain / 1000.0).ToString());
+            if (Byoyomi != 0)
+                list.Add("秒読み=" + (Byoyomi / 1000.0).ToString());
+            if (Increment != 0)
+                list.Add("加算=" + (Increment / 1000.0).ToString());
+            if (Delay != 0)
+                list.Add(("遅延=" + (Delay / 1000.0).ToString()));
+            return string.Join(",", list);
         }
 
         /// <summary>
@@ -68,8 +92,8 @@ namespace ShogiCore {
             Roundup = time.Time_Roundup;
             Total = time.Total_Time * Unit;
             Byoyomi = time.Byoyomi * Unit;
-            Delay = time.Delay * Unit;
             Increment = time.Increment * Unit;
+            Delay = time.Delay * Unit;
             Reset();
         }
 
@@ -87,7 +111,7 @@ namespace ShogiCore {
         /// リセット
         /// </summary>
         public void Reset() {
-            RemainTime = Total;
+            Remain = Total;
         }
 
         /// <summary>
@@ -111,11 +135,11 @@ namespace ShogiCore {
             else
                 time -= time % Unit;
 
-            if (RemainTime + Byoyomi <= time)
+            if (Remain + Byoyomi <= time)
                 return false;
 
-            RemainTime = Math.Max(0, RemainTime - time);
-            RemainTime += Increment;
+            Remain = Math.Max(0, Remain - time);
+            Remain += Increment;
             return true;
         }
     }

@@ -519,8 +519,8 @@ namespace ShogiCore.USI {
         public void SendGo(PlayerTime btime, PlayerTime wtime, bool colorIsBlack, bool byoyomiHack) {
             var byoyomi = (colorIsBlack ? btime : wtime).Byoyomi;
             var s = new StringBuilder();
-            s.Append(" btime ").Append(btime.RemainTime);
-            s.Append(" wtime ").Append(wtime.RemainTime);
+            s.Append(" btime ").Append(btime.Remain);
+            s.Append(" wtime ").Append(wtime.Remain);
             s.Append(" byoyomi ").Append(byoyomiHack ? Math.Max(0, byoyomi - 1000) : byoyomi);
             if (btime.Increment != 0 || wtime.Increment != 0) {
                 s.Append(" binc ").Append(btime.Increment);
