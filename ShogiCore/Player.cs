@@ -25,10 +25,9 @@ namespace ShogiCore {
         /// <summary>
         /// 一手の処理
         /// </summary>
-        /// <param name="firstTurnTime">先手の残り持ち時間[ms]</param>
-        /// <param name="secondTurnTime">後手の残り持ち時間[ms]</param>
-        /// <param name="byoyomi">秒読み</param>
-        Move DoTurn(Board board, int firstTurnTime, int secondTurnTime, int byoyomi);
+        /// <param name="btime">先手の持ち時間情報</param>
+        /// <param name="wtime">後手の持ち時間情報</param>
+        Move DoTurn(Board board, PlayerTime btime, PlayerTime wtime);
 
         /// <summary>
         /// DoTurn()などが実行中なら強制終了させる(別スレッドから呼ばれる)

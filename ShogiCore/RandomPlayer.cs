@@ -31,7 +31,7 @@ namespace ShogiCore {
         public void GameStart() {
         }
 
-        public Move DoTurn(Board board, int firstTurnTime, int secondTurnTime, int byoyomi) {
+        public Move DoTurn(Board board, PlayerTime btime, PlayerTime wtime) {
             MoveList moves = board.GetMovesSafe();
             return moves[RandUtility.Next(moves.Count)];
         }

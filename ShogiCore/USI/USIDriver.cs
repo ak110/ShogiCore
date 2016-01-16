@@ -512,13 +512,23 @@ namespace ShogiCore.USI {
         /// <summary>
         /// 思考開始の合図です。エンジンはこれを受信すると思考を開始します。
         /// </summary>
-        /// <param name="btime">先手の残り持ち時間[ms]</param>
-        /// <param name="wtime">後手の残り持ち時間[ms]</param>
-        /// <param name="byoyomi">秒読み</param>
-        public void SendGo(int btime, int wtime, int byoyomi) {
+        /// <param name="btime">先手の持ち時間情報</param>
+        /// <param name="wtime">後手の持ち時間情報</param>
+        /// <param name="colorIsBlack">先手番ならtrue、後手番ならfalse</param>
+        /// <param name="byoyomiHack">秒読みを1秒減らしてエンジンへ送信するならtrue</param>
+        public void SendGo(PlayerTime btime, PlayerTime wtime, bool colorIsBlack, bool byoyomiHack) {
+            var byoyomi = (colorIsBlack ? btime : wtime).Byoyomi;
+            var s = new StringBuilder();
+            s.Append(" btime ").Append(btime.RemainTime);
+            s.Append(" wtime ").Append(wtime.RemainTime);
+            s.Append(" byoyomi ").Append(byoyomiHack ? Math.Max(0, byoyomi - 1000) : byoyomi);
+            if (btime.Increment != 0 || wtime.Increment != 0) {
+                s.Append(" binc ").Append(btime.Increment);
+                s.Append(" winc ").Append(wtime.Increment);
+            }
             lock (goingLock) {
                 Going = true;
-                Send("go btime " + btime.ToString() + " wtime " + wtime.ToString() + " byoyomi " + byoyomi.ToString());
+                Send("go" + s.ToString());
             }
         }
         /// <summary>

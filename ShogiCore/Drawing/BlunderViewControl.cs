@@ -74,6 +74,7 @@ namespace ShogiCore.Drawing {
                 if (drawingThread == null) {
                     threadValid = true;
                     drawingThread = new Thread(DrawingThread);
+                    drawingThread.Name = "BlunderViewControl";
                     drawingThread.IsBackground = true;
                     drawingThread.Start();
                 }

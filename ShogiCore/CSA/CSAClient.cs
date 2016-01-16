@@ -552,6 +552,28 @@ namespace ShogiCore.CSA {
                             default: goto case "Time";
                         }
                         break;
+                    case "Delay":
+                        switch (beginEndStack.LastOrDefault()) {
+                            case "Time+": GameSummary.Times[0].Delay = int.Parse(line.Substring(cologne + 1)); break;
+                            case "Time-": GameSummary.Times[1].Delay = int.Parse(line.Substring(cologne + 1)); break;
+                            case "Time":
+                                GameSummary.Times[0].Delay = int.Parse(line.Substring(cologne + 1));
+                                GameSummary.Times[1].Delay = GameSummary.Times[0].Delay;
+                                break;
+                            default: goto case "Time";
+                        }
+                        break;
+                    case "Increment":
+                        switch (beginEndStack.LastOrDefault()) {
+                            case "Time+": GameSummary.Times[0].Increment = int.Parse(line.Substring(cologne + 1)); break;
+                            case "Time-": GameSummary.Times[1].Increment = int.Parse(line.Substring(cologne + 1)); break;
+                            case "Time":
+                                GameSummary.Times[0].Increment = int.Parse(line.Substring(cologne + 1));
+                                GameSummary.Times[1].Increment = GameSummary.Times[0].Increment;
+                                break;
+                            default: goto case "Time";
+                        }
+                        break;
 
                     default:
                         logger.Warn("受信データの解析に失敗: " + line);

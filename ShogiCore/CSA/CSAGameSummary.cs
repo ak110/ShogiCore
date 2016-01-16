@@ -70,9 +70,17 @@ namespace ShogiCore.CSA {
             /// </summary>
             public int Total_Time { get; set; }
             /// <summary>
-            /// Byoyomi
+            /// 秒読み
             /// </summary>
             public int Byoyomi { get; set; }
+            /// <summary>
+            /// 遅延時間
+            /// </summary>
+            public int Delay { get; set; }
+            /// <summary>
+            /// 加算時間
+            /// </summary>
+            public int Increment { get; set; }
 
             /// <summary>
             /// 既定値を設定
@@ -80,7 +88,7 @@ namespace ShogiCore.CSA {
             public Time() {
                 Time_Unit = "1sec";
                 //Least_Time_Per_Move = 0;
-                Time_Roundup = true;
+                //Time_Roundup = false;
             }
         }
 

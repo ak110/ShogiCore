@@ -176,7 +176,7 @@ namespace ShogiCore {
             LastNPS = null;
         }
 
-        public Move DoTurn(Board board, int firstTurnTime, int secondTurnTime, int byoyomi) {
+        public Move DoTurn(Board board, PlayerTime btime, PlayerTime wtime) {
             // go ponder中なら相手の指し手が一致しているかチェックして適当に処理
             if (IsPondering) {
                 var lastMoveSfen = SFENNotationWriter.ToString(board.GetLastMove().ToNotation());
@@ -206,9 +206,9 @@ namespace ShogiCore {
             else if (GoNodes.HasValue)
                 Driver.SendGoNodes(GoNodes.Value);
             else
-                Driver.SendGo(firstTurnTime, secondTurnTime, ByoyomiHack ? Math.Max(0, byoyomi - 1000) : byoyomi);
-
-            WaitForBestMove:
+                Driver.SendGo(btime, wtime,
+                    board.Turn == 0, ByoyomiHack);
+        WaitForBestMove:
             while (true)
             {
                 USICommand command;
