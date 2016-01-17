@@ -72,5 +72,25 @@ namespace ShogiCore {
             playerTime.Delay = 100;
             Assert.AreEqual("単位=0.5,持ち=10,残り=1,秒読み=0.5,加算=1.234,遅延=0.1", playerTime.ToString());
         }
+
+        [TestMethod]
+        public void GetFixedTimeTest() {
+            var playerTime = new PlayerTime();
+            playerTime.Unit = 333;
+            playerTime.LeastPerMove = 0;
+            playerTime.Roundup = false;
+            Assert.AreEqual(0, playerTime.GetFixedTime(332));
+            Assert.AreEqual(333, playerTime.GetFixedTime(333));
+            Assert.AreEqual(333, playerTime.GetFixedTime(334));
+            playerTime.Roundup = true;
+            Assert.AreEqual(333, playerTime.GetFixedTime(332));
+            Assert.AreEqual(333, playerTime.GetFixedTime(333));
+            Assert.AreEqual(666, playerTime.GetFixedTime(334));
+            playerTime.Roundup = false;
+            playerTime.LeastPerMove = 333;
+            Assert.AreEqual(333, playerTime.GetFixedTime(332));
+            Assert.AreEqual(333, playerTime.GetFixedTime(333));
+            Assert.AreEqual(333, playerTime.GetFixedTime(334));
+        }
     }
 }

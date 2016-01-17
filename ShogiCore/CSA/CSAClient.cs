@@ -142,17 +142,19 @@ namespace ShogiCore.CSA {
         /// </summary>
         public List<MoveData> Moves { get; private set; }
         /// <summary>
-        /// 開始局面からの指し手の時間[秒]のリスト。参照・更新時はCurrentBoardでlock()すること。
+        /// 開始局面からの指し手の時間[ミリ秒]のリスト。参照・更新時はCurrentBoardでlock()すること。
         /// </summary>
-        public List<int> SecondsList { get; private set; }
+        public List<int> MilliSecondsList { get; private set; }
         /// <summary>
-        /// 現在の先手の残り持ち時間[秒]
+        /// 現在の先手の残り持ち時間[ミリ秒]
         /// </summary>
-        public int FirstTurnRemainSeconds { get; private set; }
+        public int FirstTurnRemainMilliSeconds { get { return playerTimes[0].Remain; } }
         /// <summary>
-        /// 現在の後手の残り持ち時間[秒]
+        /// 現在の後手の残り持ち時間[ミリ秒]
         /// </summary>
-        public int SecondTurnRemainSeconds { get; private set; }
+        public int SecondTurnRemainMilliSeconds { get { return playerTimes[1].Remain; } }
+
+        PlayerTime[] playerTimes = new PlayerTime[2] { new PlayerTime(), new PlayerTime() };
 
         /// <summary>
         /// 終局
@@ -364,51 +366,41 @@ namespace ShogiCore.CSA {
                 // 指し手の受信
                 Match m = regexMove.Match(line);
                 if (m.Success) {
-                    string csa = m.Groups[1].Value;
-                    int sec;
+                    var moveTurn = line[0] == '+' ? 0 : 1;
+                    var time = playerTimes[CurrentBoard.Turn];
+                    var csa = m.Groups[1].Value;
+                    int ms;
                     if (m.Groups[3].Success) {
                         // 受信した思考時間をparse
-                        sec = int.Parse(m.Groups[3].Value);
+                        ms = int.Parse(m.Groups[3].Value) * time.Unit;
                     } else {
                         // 思考時間を自前計算
-                        int tick = unchecked(Environment.TickCount - lastStartTime);
-                        CSAGameSummary.Time time = GameSummary.Times[CurrentBoard.Turn];
-                        sec = Math.Max(time.Least_Time_Per_Move, time.Time_Roundup ? (tick + 999) / 1000 : tick / 1000);
-
+                        ms = time.GetFixedTime(unchecked(Environment.TickCount - lastStartTime));
                     }
                     // 指し手を進めて、指し手と時間を記録
                     MoveData move;
                     lock (CurrentBoard) {
-                        int moveTurn = line[0] == '+' ? 0 : 1;
                         if (moveTurn == CurrentBoard.Turn) {
                             // 受信した指し手でcurrentBoardを進める
                             move = PCLNotationReader.ParseMoveWithDo(CurrentBoard, csa);
                             // 時間の算出を行う
                             Moves.Add(move);
-                            SecondsList.Add(sec);
-                            if (line[0] == '+') { // 先手
-                                FirstTurnRemainSeconds -= sec;
-                            } else { // 後手
-                                SecondTurnRemainSeconds -= sec;
-                            }
+                            MilliSecondsList.Add(ms);
+                            playerTimes[CurrentBoard.Turn].Consume(ms);
                         } else {
                             // 既にSendMove側で手を進めていた場合、時間の補正のみ行う。
                             move = Moves.LastOrDefault();
                             if (m.Groups[3].Success) { // 時間を受信出来ていた場合
-                                if (line[0] == '+') { // 先手
-                                    FirstTurnRemainSeconds -= sec - SecondsList.LastOrDefault();
-                                } else { // 後手
-                                    SecondTurnRemainSeconds -= sec - SecondsList.LastOrDefault();
-                                }
-                                SecondsList[SecondsList.Count - 1] = sec;
+                                playerTimes[CurrentBoard.Turn].Remain -= ms - MilliSecondsList.LastOrDefault();
+                                MilliSecondsList[MilliSecondsList.Count - 1] = ms;
                             }
                         }
                     }
                     // 通知
                     if (GameSummary.Your_Turn == line[0]) {
-                        EnqueueCommand(CSAInternalCommandTypes.SelfMove, new MoveDataEx { MoveData = move, Time = sec * 1000 }, line);
+                        EnqueueCommand(CSAInternalCommandTypes.SelfMove, new MoveDataEx { MoveData = move, Time = ms }, line);
                     } else {
-                        EnqueueCommand(CSAInternalCommandTypes.EnemyMove, new MoveDataEx { MoveData = move, Time = sec * 1000 }, line);
+                        EnqueueCommand(CSAInternalCommandTypes.EnemyMove, new MoveDataEx { MoveData = move, Time = ms }, line);
                     }
                     lastStartTime = Environment.TickCount;
                 } else {
@@ -526,17 +518,13 @@ namespace ShogiCore.CSA {
                         switch (beginEndStack.LastOrDefault()) {
                             case "Time+":
                                 GameSummary.Times[0].Total_Time = int.Parse(line.Substring(cologne + 1));
-                                FirstTurnRemainSeconds = GameSummary.Times[0].Total_Time;
                                 break;
                             case "Time-":
                                 GameSummary.Times[1].Total_Time = int.Parse(line.Substring(cologne + 1));
-                                SecondTurnRemainSeconds = GameSummary.Times[1].Total_Time;
                                 break;
                             case "Time":
                                 GameSummary.Times[0].Total_Time = int.Parse(line.Substring(cologne + 1));
                                 GameSummary.Times[1].Total_Time = GameSummary.Times[0].Total_Time;
-                                FirstTurnRemainSeconds = GameSummary.Times[0].Total_Time;
-                                SecondTurnRemainSeconds = GameSummary.Times[1].Total_Time;
                                 break;
                             default: goto case "Time";
                         }
@@ -616,6 +604,9 @@ namespace ShogiCore.CSA {
                                 OnGameSummaryReceived();
                                 State = CSAState.AgreeWaiting;
                                 EnqueueCommand(CSAInternalCommandTypes.GameSummaryReceived);
+                            } else if (name.StartsWith("Time", StringComparison.Ordinal)) {
+                                playerTimes[0] = new PlayerTime(GameSummary.Times[0]);
+                                playerTimes[1] = new PlayerTime(GameSummary.Times[1]);
                             }
                         }
                         break;
@@ -656,7 +647,7 @@ namespace ShogiCore.CSA {
         /// </summary>
         private void OnGameSummaryReceived() {
             Moves = new List<MoveData>();
-            SecondsList = new List<int>();
+            MilliSecondsList = new List<int>();
             // 初期化
             if (InitialPosition != null) {
                 // 初期局面
@@ -668,13 +659,9 @@ namespace ShogiCore.CSA {
                 // 指し手
                 lock (CurrentBoard) {
                     foreach (MoveDataEx move in InitialPosition.Moves) {
-                        if (CurrentBoard.Turn == 0) {
-                            FirstTurnRemainSeconds -= move.Time / 1000;
-                        } else {
-                            SecondTurnRemainSeconds -= move.Time / 1000;
-                        }
+                        playerTimes[CurrentBoard.Turn].Consume(move.Time * playerTimes[CurrentBoard.Turn].Unit);
                         Moves.Add(move.MoveData);
-                        SecondsList.Add(move.Time);
+                        MilliSecondsList.Add(move.Time);
                         CurrentBoard.Do(move.MoveData);
                     }
                 }
@@ -875,17 +862,12 @@ namespace ShogiCore.CSA {
             lock (CurrentBoard) {
                 moveDataString = PCLNotationWriter.ToString(CurrentBoard, move);
                 // 思考時間をいったん自前算出
-                int tick = unchecked(Environment.TickCount - lastStartTime);
-                CSAGameSummary.Time time = GameSummary.Times[CurrentBoard.Turn];
-                int sec = Math.Max(time.Least_Time_Per_Move, time.Time_Roundup ? (tick + 999) / 1000 : tick / 1000);
-                if (CurrentBoard.Turn == 0) { // 先手
-                    FirstTurnRemainSeconds -= sec;
-                } else { // 後手
-                    SecondTurnRemainSeconds -= sec;
-                }
+                var time = playerTimes[CurrentBoard.Turn];
+                var ms = time.GetFixedTime(unchecked(Environment.TickCount - lastStartTime));
+                time.Consume(ms);
                 // 指し手と思考時間を記録し、currentBoardを進める
                 Moves.Add(move);
-                SecondsList.Add(sec);
+                MilliSecondsList.Add(ms);
                 CurrentBoard.Do(move);
             }
             // 指し手の送信

@@ -85,9 +85,9 @@ namespace ShogiCore {
             else if (time.Time_Unit.EndsWith("msec"))
                 Unit = int.Parse(time.Time_Unit.Substring(0, time.Time_Unit.Length - 4));
             else if (time.Time_Unit.EndsWith("sec"))
-                Unit = int.Parse(time.Time_Unit.Substring(0, time.Time_Unit.Length - 3));
+                Unit = int.Parse(time.Time_Unit.Substring(0, time.Time_Unit.Length - 3)) * 1000;
             else if (time.Time_Unit.EndsWith("min"))
-                Unit = int.Parse(time.Time_Unit.Substring(0, time.Time_Unit.Length - 3));
+                Unit = int.Parse(time.Time_Unit.Substring(0, time.Time_Unit.Length - 3)) * 60 * 1000;
             LeastPerMove = time.Least_Time_Per_Move * Unit;
             Roundup = time.Time_Roundup;
             Total = time.Total_Time * Unit;
@@ -127,6 +127,19 @@ namespace ShogiCore {
         /// </summary>
         /// <param name="time">消費時間</param>
         public bool Consume(ref int time) {
+            time = GetFixedTime(time);
+            bool timeUp = Remain + Byoyomi <= time;
+            Remain = Math.Max(0, Remain - time);
+            Remain += Increment;
+            return !timeUp;
+        }
+
+        /// <summary>
+        /// 消費時間の補正(端数の処理など)
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public int GetFixedTime(int time) {
             time -= Delay;
             if (time <= LeastPerMove)
                 time = LeastPerMove;
@@ -134,13 +147,7 @@ namespace ShogiCore {
                 time += time % Unit == 0 ? 0 : Unit - time % Unit;
             else
                 time -= time % Unit;
-
-            if (Remain + Byoyomi <= time)
-                return false;
-
-            Remain = Math.Max(0, Remain - time);
-            Remain += Increment;
-            return true;
+            return time;
         }
     }
 }
