@@ -37,6 +37,10 @@ namespace ShogiCore {
         /// 遅延時間[ms]
         /// </summary>
         public int Delay { get; set; }
+        /// <summary>
+        /// 時間切れを許容する時間[ms]
+        /// </summary>
+        public int Margin { get; set; }
 
         /// <summary>
         /// 残り持ち時間[ms]
@@ -73,6 +77,8 @@ namespace ShogiCore {
                 list.Add("加算=" + (Increment / 1000.0).ToString());
             if (Delay != 0)
                 list.Add(("遅延=" + (Delay / 1000.0).ToString()));
+            if (Margin != 0)
+                list.Add(("マージン=" + (Margin / 1000.0).ToString()));
             return string.Join(",", list);
         }
 
@@ -94,6 +100,7 @@ namespace ShogiCore {
             Byoyomi = time.Byoyomi * Unit;
             Increment = time.Increment * Unit;
             Delay = time.Delay * Unit;
+            Margin = 0;
             Reset();
         }
 
@@ -128,7 +135,7 @@ namespace ShogiCore {
         /// <param name="time">消費時間</param>
         public bool Consume(ref int time) {
             time = GetFixedTime(time);
-            bool timeUp = Remain + Byoyomi <= time;
+            bool timeUp = Remain + Byoyomi + Margin <= time;
             Remain = Math.Max(0, Remain - time);
             Remain += Increment;
             return !timeUp;
