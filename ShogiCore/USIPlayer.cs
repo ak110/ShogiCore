@@ -217,14 +217,16 @@ namespace ShogiCore {
                 else
                     Driver.SendGo(false, btime, wtime, board.Turn == 0, ByoyomiHack);
             } catch (Exception e) {
-                throw new ApplicationException("USIエンジンの思考時に例外発生。エンジン=" + Name, e);
+                throw new ApplicationException("USIエンジンの思考時に例外発生。エンジン=" + Name +
+                        " SFEN=" + new SFENNotationWriter().WriteToString(board.ToNotation()), e);
             }
 
         WaitForBestMove:
             while (true) {
                 USICommand command;
                 if (!Driver.TryReceiveCommand(Timeout.Infinite, out command))
-                    throw new ApplicationException("USIエンジンの思考結果取得失敗。エンジン=" + Name);
+                    throw new ApplicationException("USIエンジンの思考結果取得失敗。エンジン=" + Name +
+                        " SFEN=" + new SFENNotationWriter().WriteToString(board.ToNotation()));
 
                 switch (command.Name) {
                     case "bestmove":
