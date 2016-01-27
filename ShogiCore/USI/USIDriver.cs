@@ -514,11 +514,14 @@ namespace ShogiCore.USI {
         /// </summary>
         /// <param name="btime">先手の持ち時間情報</param>
         /// <param name="wtime">後手の持ち時間情報</param>
+        /// <param name="ponder">ponderなのか否か</param>
         /// <param name="colorIsBlack">先手番ならtrue、後手番ならfalse</param>
         /// <param name="byoyomiHack">秒読みを1秒減らしてエンジンへ送信するならtrue</param>
-        public void SendGo(PlayerTime btime, PlayerTime wtime, bool colorIsBlack, bool byoyomiHack) {
+        public void SendGo(bool ponder, PlayerTime btime, PlayerTime wtime, bool colorIsBlack, bool byoyomiHack) {
             var byoyomi = (colorIsBlack ? btime : wtime).Byoyomi;
             var s = new StringBuilder();
+            if (ponder)
+                s.Append(" ponder");
             s.Append(" btime ").Append(btime.Remain);
             s.Append(" wtime ").Append(wtime.Remain);
             s.Append(" byoyomi ").Append(byoyomiHack ? Math.Max(0, byoyomi - 1000) : byoyomi);
@@ -562,15 +565,6 @@ namespace ShogiCore.USI {
             lock (goingLock) {
                 Going = true;
                 Send("go nodes " + nodes.ToString());
-            }
-        }
-        /// <summary>
-        /// go ponderを送る
-        /// </summary>
-        public void SendGoPonder() {
-            lock (goingLock) {
-                Going = true;
-                Send("go ponder");
             }
         }
 

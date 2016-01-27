@@ -215,7 +215,7 @@ namespace ShogiCore {
                 else if (GoNodes.HasValue)
                     Driver.SendGoNodes(GoNodes.Value);
                 else
-                    Driver.SendGo(btime, wtime, board.Turn == 0, ByoyomiHack);
+                    Driver.SendGo(false, btime, wtime, board.Turn == 0, ByoyomiHack);
             } catch (Exception e) {
                 throw new ApplicationException("USIエンジンの思考時に例外発生。エンジン=" + Name, e);
             }
@@ -284,7 +284,7 @@ namespace ShogiCore {
         /// DoTurn内に完全に隠蔽することも可能だが、よりシビアなタイミングで呼び出したり、
         /// ponderしなかったりする場合を考慮していちいち呼ばないとやらないように作っておく。
         /// </remarks>
-        public void StartPonder(Board board) {
+        public void StartPonder(Board board, PlayerTime btime, PlayerTime wtime) {
             if (string.IsNullOrEmpty(LastPonderMove))
                 return;
             logger.Debug("ponder開始");
@@ -292,10 +292,11 @@ namespace ShogiCore {
             notation.Moves = Enumerable.Concat(notation.Moves,
                 new[] { new MoveDataEx(SFENNotationReader.ToMoveData(LastPonderMove)) })
                 .ToArray();
+            var colorIsBlack = board.Turn != 0; // LastPonderMoveの分があるので手番反転
             InitializeBeforeGo();
             IsPondering = true;
             Driver.SendPosition(notation);
-            Driver.SendGoPonder();
+            Driver.SendGo(true, btime, wtime, colorIsBlack, ByoyomiHack);
         }
 
         /// <summary>
