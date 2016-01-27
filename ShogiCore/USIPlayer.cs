@@ -177,43 +177,46 @@ namespace ShogiCore {
         }
 
         public Move DoTurn(Board board, PlayerTime btime, PlayerTime wtime) {
-            // go ponder中なら相手の指し手が一致しているかチェックして適当に処理
-            if (IsPondering) {
-                var lastMoveSfen = SFENNotationWriter.ToString(board.GetLastMove().ToNotation());
-                if (lastMoveSfen == LastPonderMove) {
-                    logger.Debug("ponder成功");
-                    IsPondering = false;
-                    LastPonderMove = null;
-                    Driver.SendPonderHit();
-                    goto WaitForBestMove;
-                } else {
-                    logger.Debug("ponder失敗");
-                    Driver.SendStop();
-                    if (!Driver.WaitFor(30000, x => x.Name == "bestmove"))
-                        logger.Warn("ponderに対するstopでbestmoveが未着 (1)");
+            try {
+                // go ponder中なら相手の指し手が一致しているかチェックして適当に処理
+                if (IsPondering) {
+                    var lastMoveSfen = SFENNotationWriter.ToString(board.GetLastMove().ToNotation());
+                    if (lastMoveSfen == LastPonderMove) {
+                        logger.Debug("ponder成功");
+                        IsPondering = false;
+                        LastPonderMove = null;
+                        Driver.SendPonderHit();
+                        goto WaitForBestMove;
+                    } else {
+                        logger.Debug("ponder失敗");
+                        Driver.SendStop();
+                        if (!Driver.WaitFor(30000, x => x.Name == "bestmove"))
+                            logger.Warn("ponderに対するstopでbestmoveが未着 (1)");
+                    }
                 }
+
+                // 初期化
+                InitializeBeforeGo();
+                IsPondering = false;
+                LastPonderMove = null;
+
+                // 局面送って思考開始
+                Driver.SendPosition(board.ToNotation());
+                if (GoDepth.HasValue)
+                    Driver.SendGoDepth(GoDepth.Value);
+                else if (GoNodes.HasValue)
+                    Driver.SendGoNodes(GoNodes.Value);
+                else
+                    Driver.SendGo(btime, wtime, board.Turn == 0, ByoyomiHack);
+            } catch (Exception e) {
+                throw new ApplicationException("USIエンジンの思考時に例外発生。エンジン=" + Name, e);
             }
 
-            // 初期化
-            InitializeBeforeGo();
-            IsPondering = false;
-            LastPonderMove = null;
-
-            // 局面送って思考開始
-            Driver.SendPosition(board.ToNotation());
-            if (GoDepth.HasValue)
-                Driver.SendGoDepth(GoDepth.Value);
-            else if (GoNodes.HasValue)
-                Driver.SendGoNodes(GoNodes.Value);
-            else
-                Driver.SendGo(btime, wtime,
-                    board.Turn == 0, ByoyomiHack);
         WaitForBestMove:
-            while (true)
-            {
+            while (true) {
                 USICommand command;
                 if (!Driver.TryReceiveCommand(Timeout.Infinite, out command))
-                    return Move.Resign;
+                    throw new ApplicationException("USIエンジンの思考結果取得失敗。エンジン=" + Name);
 
                 switch (command.Name) {
                     case "bestmove":
