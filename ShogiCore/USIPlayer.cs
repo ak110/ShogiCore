@@ -37,6 +37,14 @@ namespace ShogiCore {
         /// </summary>
         public string LastScoreString { get; private set; }
         /// <summary>
+        /// info lowerbound
+        /// </summary>
+        public bool LastLowerBound { get; private set; }
+        /// <summary>
+        /// info upperbound
+        /// </summary>
+        public bool LastUpperBound { get; private set; }
+        /// <summary>
         /// info pvコマンドの値。非null。
         /// </summary>
         public string[] LastPV { get; private set; }
@@ -314,6 +322,9 @@ namespace ShogiCore {
         /// infoコマンド受信時の処理
         /// </summary>
         void Driver_InfoReceived(object sender, USIInfoEventArgs e) {
+            LastLowerBound = false;
+            LastUpperBound = false;
+
             foreach (USIInfo info in e.SubCommands) {
                 switch (info.Name) {
                     case "score": {
@@ -352,6 +363,9 @@ namespace ShogiCore {
                             }
                         }
                         break;
+
+                    case "lowerbound": LastLowerBound = true; break;
+                    case "upperbound": LastUpperBound = true; break;
 
                     case "pv": LastPV = info.Parameters; break;
 
