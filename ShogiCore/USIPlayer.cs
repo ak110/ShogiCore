@@ -260,8 +260,11 @@ namespace ShogiCore {
                         TimeUp = true;
                         LastRealMilliSeconds = time;
                         try { Driver.SendStop(); } catch { }
-                        throw new ApplicationException("時間切れ発生。エンジン=" + Name + " SFEN=" + sfen +
-                            " 消費時間=" + (sw.ElapsedMilliseconds / 1000.0) + " " + t);
+                        throw new ApplicationException("時間切れ発生。エンジン=" + Name +
+                            " 実測時間=" + (sw.ElapsedMilliseconds / 1000.0) +
+                            " USI時間=" + (LastTime ?? 0) / 1000.0 +
+                            " " + t +
+                            " SFEN=" + sfen);
                     }
                     continue;
                 }
