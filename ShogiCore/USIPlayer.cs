@@ -21,6 +21,15 @@ namespace ShogiCore {
         public const int MateValue = 10000000;
 
         /// <summary>
+        /// 前回の消費時間(実測、ミリ秒)
+        /// </summary>
+        public int LastRealMilliSeconds { get; private set; }
+        /// <summary>
+        /// 時間切れの場合true
+        /// </summary>
+        public bool TimeUp { get; private set; }
+
+        /// <summary>
         /// info score cp、もしくはinfo score mateを受け取っていたならtrue
         /// </summary>
         public bool HasScore { get; private set; }
@@ -103,6 +112,8 @@ namespace ShogiCore {
         /// </summary>
         public event EventHandler<USIInfoEventArgs> InfoReceived;
 
+        volatile bool aborted = false;
+
         /// <summary>
         /// 初期化
         /// </summary>
@@ -170,21 +181,13 @@ namespace ShogiCore {
             Driver.SendUSINewGame();
         }
 
-        /// <summary>
-        /// 初期化
-        /// </summary>
-        private void InitializeBeforeGo() {
-            HasScore = false;
-            LastScore = 0;
-            LastScoreString = "";
-            LastPV = new string[0];
-            LastTime = null;
-            LastDepth = null;
-            LastNodes = null;
-            LastNPS = null;
-        }
-
         public Move DoTurn(Board board, PlayerTime btime, PlayerTime wtime) {
+            var sfen = new SFENNotationWriter().WriteToString(board.ToNotation()).TrimEnd();
+
+            TimeUp = false;
+
+            var sw = Stopwatch.StartNew();
+
             try {
                 // go ponder中なら相手の指し手が一致しているかチェックして適当に処理
                 if (IsPondering) {
@@ -209,7 +212,7 @@ namespace ShogiCore {
                 LastPonderMove = null;
 
                 // 局面送って思考開始
-                Driver.SendPosition(board.ToNotation());
+                Driver.SendPosition(sfen);
                 if (GoDepth.HasValue)
                     Driver.SendGoDepth(GoDepth.Value);
                 else if (GoNodes.HasValue)
@@ -221,12 +224,47 @@ namespace ShogiCore {
                         " SFEN=" + new SFENNotationWriter().WriteToString(board.ToNotation()), e);
             }
 
-        WaitForBestMove:
+            WaitForBestMove:
+            var move = WaitForBestMove(board, sfen, sw, board.Turn == 0 ? btime : wtime);
+            LastRealMilliSeconds = (int)sw.ElapsedMilliseconds;
+            return move;
+        }
+
+        /// <summary>
+        /// 初期化
+        /// </summary>
+        private void InitializeBeforeGo() {
+            HasScore = false;
+            LastScore = 0;
+            LastScoreString = "";
+            LastPV = new string[0];
+            LastTime = null;
+            LastDepth = null;
+            LastNodes = null;
+            LastNPS = null;
+        }
+
+        private Move WaitForBestMove(Board board, string sfen, Stopwatch sw, PlayerTime t) {
             while (true) {
                 USICommand command;
-                if (!Driver.TryReceiveCommand(Timeout.Infinite, out command))
-                    throw new ApplicationException("USIエンジンの思考結果取得失敗。エンジン=" + Name +
-                        " SFEN=" + new SFENNotationWriter().WriteToString(board.ToNotation()));
+                int timeout =
+                    t.Unit - (int)sw.ElapsedMilliseconds % t.Unit
+                    + t.Unit / 2;
+                if (!Driver.TryReceiveCommand(timeout, out command)) {
+                    if (aborted)
+                        return Move.Resign;
+                    if (Driver.IsProcessExited)
+                        throw new ApplicationException("USIエンジンの思考結果取得失敗。エンジン=" + Name + " SFEN=" + sfen);
+                    int time = (int)sw.ElapsedMilliseconds;
+                    if (t.IsTimeUp(time)) {
+                        TimeUp = true;
+                        LastRealMilliSeconds = time;
+                        try { Driver.SendStop(); } catch { }
+                        throw new ApplicationException("時間切れ発生。エンジン=" + Name + " SFEN=" + sfen +
+                            " 消費時間=" + (sw.ElapsedMilliseconds / 1000.0) + " " + t);
+                    }
+                    continue;
+                }
 
                 switch (command.Name) {
                     case "bestmove":
@@ -250,14 +288,13 @@ namespace ShogiCore {
                         if (3 <= @params.Length && @params[1] == "ponder")
                             LastPonderMove = @params[2];
                         // 指し手を解析
-                        Move move = Move.FromNotation(board, SFENNotationReader.ToMoveData(sfenMove));
-                        return move;
-                        // bestmove以外のコマンドはスルー
+                        return Move.FromNotation(board, SFENNotationReader.ToMoveData(sfenMove));
                 }
             }
         }
 
         public void Abort() {
+            aborted = true;
             Driver.SendStop();
             Driver.Kill();
         }

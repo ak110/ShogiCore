@@ -457,6 +457,11 @@ namespace ShogiCore.USI {
         }
 
         /// <summary>
+        /// プロセスが終了してしまっているならtrue
+        /// </summary>
+        public bool IsProcessExited { get { return process.HasExited; } }
+
+        /// <summary>
         /// コマンドの受信
         /// </summary>
         /// <param name="timeout">最大待ち時間[ms]</param>
@@ -506,7 +511,14 @@ namespace ShogiCore.USI {
         /// position
         /// </summary>
         public void SendPosition(Notation.Notation notation) {
-            Send("position", new SFENNotationWriter().WriteToString(notation).TrimEnd());
+            SendPosition(new SFENNotationWriter().WriteToString(notation).TrimEnd());
+        }
+
+        /// <summary>
+        /// position
+        /// </summary>
+        public void SendPosition(string sfen) {
+            Send("position", sfen);
         }
 
         /// <summary>

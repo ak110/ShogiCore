@@ -36,6 +36,7 @@ namespace ShogiCore {
             playerTime.Reset();
 
             Assert.IsFalse(playerTime.Consume(ngTime));
+            playerTime.Reset();
             Assert.IsTrue(playerTime.Consume(ngTime - 1));
             Assert.AreEqual(nextTime, playerTime.Remain);
         }
@@ -52,6 +53,7 @@ namespace ShogiCore {
             playerTime.Increment = 1234;
             // 持ち時間+秒読みを超えるとNG
             Assert.IsFalse(playerTime.Consume(1500));
+            playerTime.Remain = 1000;
             // ぎりぎりOK
             Assert.IsTrue(playerTime.Consume(1499));
             // 持ち時間が尽きたけどIncrementの分増える
