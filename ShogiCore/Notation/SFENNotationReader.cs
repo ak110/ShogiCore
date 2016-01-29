@@ -278,7 +278,12 @@ namespace ShogiCore.Notation {
         /// 指し手表現かどうかを判定
         /// </summary>
         public static bool IsMove(string str) {
-            return Regex.IsMatch(str, @"^([PLNSGBR]\*|[1-9][a-i])[1-9][a-i]\+?$");
+            return Regex.IsMatch(str, @"^([PLNSGBR]\*|[1-9][a-i])[1-9][a-i]\+?$")
+                || str == "resign"
+                || str == "win"
+                || str == "pass"
+                || str == "endless"
+                || str == "perpetual";
         }
     }
 }
