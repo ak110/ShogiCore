@@ -24,10 +24,6 @@ namespace ShogiCore {
         /// 前回の消費時間(実測、ミリ秒)
         /// </summary>
         public int LastRealMilliSeconds { get; private set; }
-        /// <summary>
-        /// 時間切れの場合true
-        /// </summary>
-        public bool TimeUp { get; private set; }
 
         /// <summary>
         /// info score cp、もしくはinfo score mateを受け取っていたならtrue
@@ -184,8 +180,6 @@ namespace ShogiCore {
         public Move DoTurn(Board board, PlayerTime btime, PlayerTime wtime) {
             var sfen = new SFENNotationWriter().WriteToString(board.ToNotation()).TrimEnd();
 
-            TimeUp = false;
-
             var sw = Stopwatch.StartNew();
 
             try {
@@ -249,23 +243,24 @@ namespace ShogiCore {
                 USICommand command;
                 int timeout =
                     t.Unit - (int)sw.ElapsedMilliseconds % t.Unit
-                    + t.Unit / 2;
+                    + t.Unit / 2; // 1.5, 2.5, 3.5, ... くらいの間隔でチェックする
                 if (!Driver.TryReceiveCommand(timeout, out command)) {
+                    // 中断
                     if (aborted)
                         return Move.Resign;
+                    // 異常終了
                     if (Driver.IsProcessExited)
-                        throw new ApplicationException("USIエンジンの思考結果取得失敗。エンジン=" + Name + " SFEN=" + sfen);
+                        throw new ApplicationException("USIエンジンの異常終了 エンジン=" + Name + " SFEN=" + sfen);
+                    // 無応答。ぎりぎり時間切れではなく盛大にオーバーしてる場合。(閾値は適当。単位時間×16とした。)
                     int time = (int)sw.ElapsedMilliseconds;
-                    if (t.IsTimeUp(time)) {
-                        TimeUp = true;
-                        LastRealMilliSeconds = time;
-                        try { Driver.SendStop(); } catch { }
-                        throw new ApplicationException("時間切れ発生。エンジン=" + Name +
+                    if (t.GetLimitTime() + t.Unit * 16 <= time) {
+                        throw new ApplicationException("USIエンジンが無応答 エンジン=" + Name +
                             " 実測時間=" + (sw.ElapsedMilliseconds / 1000.0) +
                             " USI時間=" + (LastTime ?? 0) / 1000.0 +
                             " " + t +
                             " SFEN=" + sfen);
                     }
+                    // 時間が残ってる(?)ので再度待つ
                     continue;
                 }
 

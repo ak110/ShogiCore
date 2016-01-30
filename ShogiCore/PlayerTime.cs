@@ -134,27 +134,19 @@ namespace ShogiCore {
         /// </summary>
         /// <param name="time">消費時間</param>
         public bool Consume(ref int time) {
-            bool timeUp = IsTimeUp(ref time);
+            time = GetFixedTime(time);
+            bool timeUp = GetLimitTime() <= time;
             Remain = Math.Max(0, Remain - time);
             Remain += Increment;
             return !timeUp;
         }
 
         /// <summary>
-        /// 時間が足りているのか判定
+        /// 現在使用可能な最大時間。DelayやRoundupは現状考慮していないので注意。
         /// </summary>
-        /// <param name="time">消費時間</param>
-        public bool IsTimeUp(int time) {
-            return IsTimeUp(ref time);
-        }
-
-        /// <summary>
-        /// 時間が足りているのか判定
-        /// </summary>
-        /// <param name="time">消費時間</param>
-        public bool IsTimeUp(ref int time) {
-            time = GetFixedTime(time);
-            return Remain + Byoyomi + Margin <= time;
+        public int GetLimitTime()
+        {
+            return Remain + Byoyomi + Margin;
         }
 
         /// <summary>
