@@ -400,15 +400,17 @@ namespace ShogiCore.USI {
         /// プロセス終了
         /// </summary>
         void process_Exited(object sender, EventArgs e) {
-            if (usiLogger.IsDebugEnabled) {
-                int exitCode;
-                try {
-                    var process = this.process;
-                    exitCode = process == null ? processExitCode : process.ExitCode;
-                } catch {
-                    exitCode = processExitCode;
-                }
+            int exitCode;
+            try {
+                var process = this.process;
+                exitCode = process == null ? processExitCode : process.ExitCode;
+            } catch {
+                exitCode = processExitCode;
+            }
+            if (exitCode == 0) {
                 usiLogger.DebugFormat("{0}X: プロセス終了(ExitCode={1})", logID, exitCode.ToString());
+            } else {
+                usiLogger.WarnFormat("{0}X: プロセス終了(ExitCode={1})", logID, exitCode.ToString());
             }
             lock (commandQueue) {
                 Monitor.Pulse(commandQueue);
