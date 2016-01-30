@@ -122,7 +122,7 @@ namespace ShogiCore {
         }
 
         /// <summary>
-        /// 時間を使用する。足りない場合はfalseを返す。
+        /// 時間を使用する。足りない場合は消費させずにfalseを返す。
         /// </summary>
         /// <param name="time">消費時間</param>
         public bool Consume(int time) {
@@ -130,15 +130,23 @@ namespace ShogiCore {
         }
 
         /// <summary>
-        /// 時間を使用する。足りない場合はfalseを返す。
+        /// 時間を使用する。足りない場合は消費させずにfalseを返す。
         /// </summary>
         /// <param name="time">消費時間</param>
         public bool Consume(ref int time) {
             time = GetFixedTime(time);
-            bool timeUp = GetLimitTime() <= time;
+            if (GetLimitTime() <= time)
+                return false;
             Remain = Math.Max(0, Remain - time);
             Remain += Increment;
-            return !timeUp;
+            return true;
+        }
+
+        /// <summary>
+        /// 消費時間を使いつくす。時間切れでも構わず続行する場合などに使う。
+        /// </summary>
+        public void Exhaust() {
+            Remain = 0 + Increment;
         }
 
         /// <summary>
