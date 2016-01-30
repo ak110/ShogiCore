@@ -132,13 +132,13 @@ namespace ShogiCore.USI {
         #region 各種イベント
 
         /// <summary>
-        /// メッセージ受信(エンジンの標準出力)
-        /// </summary>
-        public event EventHandler<USIEventArgs> MessageReceived;
-        /// <summary>
         /// メッセージ送信(エンジンの標準入力)
         /// </summary>
         public event EventHandler<USIEventArgs> MessageSent;
+        /// <summary>
+        /// メッセージ受信(エンジンの標準出力)
+        /// </summary>
+        public event EventHandler<USIEventArgs> MessageReceived;
         /// <summary>
         /// エラー受信(エンジンの標準エラー)
         /// </summary>
@@ -303,7 +303,7 @@ namespace ShogiCore.USI {
                 usiLogger.Debug(recvUSILogPrefix + line);
             }
 
-            if (string.IsNullOrEmpty(line)) return; // 念のため、空なら無視
+            if (line.Length <= 0) return; // 空なら無視
 
             var MessageReceived = this.MessageReceived;
             if (MessageReceived != null) {
@@ -360,7 +360,7 @@ namespace ShogiCore.USI {
         /// </summary>
         void process_ErrorDataReceived(object sender, DataReceivedEventArgs e) {
             string line = (e.Data ?? "").TrimEnd('\r', '\n'); // 念のため末尾に改行っぽいのがあれば削除（適当）
-            if (line.Length <= 0) return;
+            if (line.Length <= 0) return; // 空なら無視
 
             if (usiLogger.IsInfoEnabled) {
                 usiLogger.Info(errUSILogPrefix + line);

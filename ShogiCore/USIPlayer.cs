@@ -21,9 +21,9 @@ namespace ShogiCore {
         public const int MateValue = 10000000;
 
         /// <summary>
-        /// 前回の消費時間(実測、ミリ秒)
+        /// 前回の消費時間(実測)
         /// </summary>
-        public int LastRealMilliSeconds { get; private set; }
+        public Stopwatch LastTurnStopwatch { get; private set; }
 
         /// <summary>
         /// info score cp、もしくはinfo score mateを受け取っていたならtrue
@@ -131,8 +131,9 @@ namespace ShogiCore {
             Options = new USIOptions();
             //Options["USI_Ponder"] = "false";
             //Options["USI_Hash"] = "32";
-            // 念のため初期化
+            // 初期化
             LastPV = new string[0];
+            LastTurnStopwatch = new Stopwatch();
         }
 
         /// <summary>
@@ -180,8 +181,7 @@ namespace ShogiCore {
         public Move DoTurn(Board board, PlayerTime btime, PlayerTime wtime) {
             var sfen = new SFENNotationWriter().WriteToString(board.ToNotation()).TrimEnd();
 
-            var sw = Stopwatch.StartNew();
-
+            LastTurnStopwatch.Restart();
             try {
                 // go ponder中なら相手の指し手が一致しているかチェックして適当に処理
                 if (IsPondering) {
@@ -213,15 +213,15 @@ namespace ShogiCore {
                     Driver.SendGoNodes(GoNodes.Value);
                 else
                     Driver.SendGo(false, btime, wtime, board.Turn == 0, ByoyomiHack);
-            } catch (Exception e) {
-                throw new ApplicationException("USIエンジンの思考時に例外発生。エンジン=" + Name +
-                        " SFEN=" + new SFENNotationWriter().WriteToString(board.ToNotation()), e);
-            }
 
-            WaitForBestMove:
-            var move = WaitForBestMove(board, sfen, sw, board.Turn == 0 ? btime : wtime);
-            LastRealMilliSeconds = (int)sw.ElapsedMilliseconds;
-            return move;
+                // 指し手を取得
+                WaitForBestMove:
+                return WaitForBestMove(board, board.Turn == 0 ? btime : wtime);
+            } catch (Exception e) {
+                throw new ApplicationException("USIエンジンの思考時に例外発生。エンジン=" + Name + " SFEN=" + sfen, e);
+            } finally {
+                LastTurnStopwatch.Stop();
+            }
         }
 
         /// <summary>
@@ -238,27 +238,23 @@ namespace ShogiCore {
             LastNPS = null;
         }
 
-        private Move WaitForBestMove(Board board, string sfen, Stopwatch sw, PlayerTime t) {
+        private Move WaitForBestMove(Board board, PlayerTime t) {
             while (true) {
                 USICommand command;
-                int timeout =
-                    t.Unit - (int)sw.ElapsedMilliseconds % t.Unit
-                    + t.Unit / 2; // 1.5, 2.5, 3.5, ... くらいの間隔でチェックする
-                if (!Driver.TryReceiveCommand(timeout, out command)) {
+                if (!Driver.TryReceiveCommand(t.Unit / 2, out command)) {
                     // 中断
                     if (aborted)
                         return Move.Resign;
                     // 異常終了
                     if (Driver.IsProcessExited)
-                        throw new ApplicationException("USIエンジンの異常終了 エンジン=" + Name + " SFEN=" + sfen);
+                        throw new ApplicationException("USIエンジンの異常終了");
                     // 無応答。ぎりぎり時間切れではなく盛大にオーバーしてる場合。(閾値は適当。単位時間×16とした。)
-                    int time = (int)sw.ElapsedMilliseconds;
+                    int time = (int)LastTurnStopwatch.ElapsedMilliseconds;
                     if (t.GetLimitTime() + t.Unit * 16 <= time) {
-                        throw new ApplicationException("USIエンジンが無応答 エンジン=" + Name +
-                            " 実測時間=" + (sw.ElapsedMilliseconds / 1000.0) +
+                        throw new ApplicationException("USIエンジンが無応答" +
+                            " 実測時間=" + (time / 1000.0) +
                             " USI時間=" + (LastTime ?? 0) / 1000.0 +
-                            " " + t +
-                            " SFEN=" + sfen);
+                            " " + t);
                     }
                     // 時間が残ってる(?)ので再度待つ
                     continue;
