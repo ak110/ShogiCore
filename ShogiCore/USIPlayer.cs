@@ -289,7 +289,11 @@ namespace ShogiCore {
 
         public void Abort() {
             aborted = true;
-            Driver.SendStop();
+            try {
+                Driver.SendStop();
+            } catch (Exception e) {
+                logger.Debug("Abort時に例外発生", e);
+            }
             Driver.Kill();
         }
 
