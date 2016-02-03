@@ -113,17 +113,20 @@ namespace ShogiCore {
         /// <summary>
         /// 初期化
         /// </summary>
+        /// <param name="name">プレイヤー名</param>
         /// <param name="engineFileName">USIエンジンのパス(環境変数利用可能)</param>
         /// <param name="engineArguments">USIエンジンの引数。nullで無し。将棋所が未対応なのでnullが無難？</param>
         /// <param name="logID">ログ記録用のエンジンのID</param>
-        public USIPlayer(string engineFileName, string engineArguments = null, int logID = 1)
-            : this(new USIDriver(engineFileName, engineArguments, logID)) { }
+        public USIPlayer(string name, string engineFileName, string engineArguments, int logID = 1)
+            : this(name, new USIDriver(engineFileName, engineArguments, logID)) { }
 
         /// <summary>
         /// 初期化
         /// </summary>
+        /// <param name="name">プレイヤー名</param>
         /// <param name="driver">USIエンジン</param>
-        public USIPlayer(USIDriver driver) {
+        public USIPlayer(string name, USIDriver driver) {
+            Name = name;
             Driver = driver;
             Driver.CommandReceived += new EventHandler<USICommandEventArgs>(Driver_CommandReceived);
             Driver.InfoReceived += new EventHandler<USIInfoEventArgs>(Driver_InfoReceived);
@@ -169,7 +172,6 @@ namespace ShogiCore {
 
         public void GameStart(ProcessPriorityClass pricessPriorityClass) {
             if (Driver.Start(pricessPriorityClass)) {
-                Name = Driver.IdName;
                 foreach (KeyValuePair<string, string> p in Options)
                     Driver.SendSetOption(p.Key, p.Value);
             }
@@ -342,7 +344,6 @@ namespace ShogiCore {
         void Driver_CommandReceived(object sender, USICommandEventArgs e) {
             switch (e.USICommand.Name) {
                 case "id":
-                    Name = Driver.IdName; // 手抜きで毎回セットしとく
                     e.Handled = true;
                     break;
 
