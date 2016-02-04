@@ -8,18 +8,23 @@ namespace ShogiCore {
     /// 対局してるエンジンの統計情報（1対局分の各手番の情報）
     /// </summary>
     public class EngineStatisticsForGame {
-        public readonly GameMeanValue TimeReal = new GameMeanValue();
-        public readonly GameMeanValue TimeUSI = new GameMeanValue();
-        public readonly GameMeanValue Depth = new GameMeanValue();
-        public readonly GameMeanValue Nodes = new GameMeanValue();
-        public readonly GameMeanValue NPS = new GameMeanValue();
+        /// <summary>
+        /// 1手指した時の情報
+        /// </summary>
+        public struct State {
+            /// <summary>
+            /// 時間(実測)、時間(USI)、深さ、ノード数、NPS
+            /// </summary>
+            public double[] Values;
+        }
+
+        /// <summary>
+        /// 1局分の情報
+        /// </summary>
+        public List<State> States { get; private set; }
 
         public EngineStatisticsForGame() {
-            TimeReal.MedianThreshold = 1.0;
-            TimeUSI.MedianThreshold = 1.0;
-            Depth.MedianThreshold = 1.0;
-            Nodes.MedianThreshold = 1.0;
-            NPS.MedianThreshold = 0.3;
+            States = new List<State>();
         }
 
         /// <summary>
@@ -27,26 +32,27 @@ namespace ShogiCore {
         /// </summary>
         /// <param name="player">エンジン</param>
         /// <param name="timeReal">実測時間（ミリ秒）</param>
-        public void Add(USIPlayer player, double? timeReal) {
-            TimeReal.Values.Add(timeReal);
-            TimeUSI.Values.Add(player.LastTime);
-            Depth.Values.Add(player.LastDepth);
-            Nodes.Values.Add(player.LastNodes);
-            NPS.Values.Add(player.LastNPS);
+        public void Add(USIPlayer player, double timeReal) {
+            States.Add(new State {
+                Values = new double[] {
+                    timeReal,
+                    player.LastTime ?? timeReal,
+                    player.LastDepth ?? 0,
+                    player.LastNodes ?? 0,
+                    player.LastNPS ?? 0,
+                }
+            });
         }
 
-        /// <summary>
-        /// 平均値などを算出する。
-        /// </summary>
-        /// <remarks>
-        /// 対局終了時に呼び出す。
-        /// </remarks>
-        public void Calculate() {
-            TimeReal.Calculate();
-            TimeUSI.Calculate();
-            Depth.Calculate();
-            Nodes.Calculate();
-            NPS.Calculate();
+        public double? MeanTimeRel { get { return GetMean(0); } }
+        public double? MeanTimeUSI { get { return GetMean(1); } }
+        public double? MeanDepth { get { return GetMean(2); } }
+        public double? MeanNodes { get { return GetMean(3); } }
+        public double? MeanNPS { get { return GetMean(4); } }
+
+        private double? GetMean(int index) {
+            if (!States.Any()) return null;
+            return States.Average(s => s.Values[index]);
         }
     }
 }

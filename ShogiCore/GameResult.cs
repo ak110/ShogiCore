@@ -145,5 +145,17 @@ namespace ShogiCore {
                 default: goto case GameEndReason.Error;
             }
         }
+        /// <summary>
+        /// 対局が詰みなどによってきちんと終わったならtrue。
+        /// 千日手・時間切れ・異常終了・中断などならfalse。
+        /// 入玉での引き分けはtrueにする。
+        /// </summary>
+        public static bool IsGameCompleted(this GameEndReason reason) {
+            return reason == GameEndReason.Resign ||
+                reason == GameEndReason.Nyuugyoku ||
+                reason == GameEndReason.NyuugyokuDraw ||
+                reason == GameEndReason.Jishogi ||
+                reason == GameEndReason.Mate;
+        }
     }
 }
