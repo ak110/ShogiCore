@@ -59,6 +59,7 @@
     <Compile Include="Board.LispGen.cs" />
     <Compile Include="Board.Static.cs" />
     <Compile Include="BoardDebugger.cs" />
+    <Compile Include="EventUtility.cs" />
     <Compile Include="BoardHistoryEntry.cs" />
     <Compile Include="BoardMoveEventArgs.cs" />
     <Compile Include="BoardProperty\BoardPieceCount.cs" />

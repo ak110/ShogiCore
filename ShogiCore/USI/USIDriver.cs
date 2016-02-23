@@ -169,12 +169,17 @@ namespace ShogiCore.USI {
         }
 
         /// <summary>
+        /// エンジンのプロセスが開始済みなのか否か
+        /// </summary>
+        public bool IsStarted { get { return process != null; } }
+
+        /// <summary>
         /// エンジンの起動
         /// </summary>
         /// <returns>true:起動した、false:起動済み</returns>
         public bool Start(ProcessPriorityClass pricessPriorityClass = ProcessPriorityClass.Normal) {
             try {
-                if (process != null)
+                if (IsStarted)
                     return false;
                 process = new Process();
 

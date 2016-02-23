@@ -107,6 +107,17 @@ namespace ShogiCore {
         /// InfoReceived
         /// </summary>
         public event EventHandler<USIInfoEventArgs> InfoReceived;
+        /// <summary>
+        /// エンジンにpositionを送る時のイベント (ponder絡みでタイミングがややこしいため)
+        /// </summary>
+        public event EventHandler<DataEventArgs<Board>> PositionChanged;
+        /// <summary>
+        /// ponder関連
+        /// </summary>
+        /// <remarks>
+        /// PonderStartingはPositionChangedとは異なり移動前のBoardを渡す。(処理の都合上移動前が欲しい場合用)
+        /// </remarks>
+        public event EventHandler<DataEventArgs<Board>> PonderStarting, PonderHit, PonderStopped;
 
         volatile bool aborted = false;
 
@@ -150,6 +161,7 @@ namespace ShogiCore {
         /// オプションの設定
         /// </summary>
         public void SetOption(string name, string value) {
+            Debug.Assert(!Driver.IsStarted);
             Options[name] = value;
         }
 
@@ -193,12 +205,14 @@ namespace ShogiCore {
                         IsPondering = false;
                         LastPonderMove = null;
                         Driver.SendPonderHit();
+                        PonderHit.InvokeSafe(this, board);
                         goto WaitForBestMove;
                     } else {
                         logger.Debug("ponder失敗");
                         Driver.SendStop();
                         if (!Driver.WaitFor(30000, x => x.Name == "bestmove"))
                             logger.Warn("ponderに対するstopでbestmoveが未着 (1)");
+                        PonderStopped.InvokeSafe(this, board);
                     }
                 }
 
@@ -208,6 +222,7 @@ namespace ShogiCore {
                 LastPonderMove = null;
 
                 // 局面送って思考開始
+                PositionChanged.InvokeSafe(this, board);
                 Driver.SendPosition(sfen);
                 if (GoDepth.HasValue)
                     Driver.SendGoDepth(GoDepth.Value);
@@ -323,19 +338,21 @@ namespace ShogiCore {
         /// DoTurn内に完全に隠蔽することも可能だが、よりシビアなタイミングで呼び出したり、
         /// ponderしなかったりする場合を考慮していちいち呼ばないとやらないように作っておく。
         /// </remarks>
-        public void StartPonder(Board board, PlayerTime btime, PlayerTime wtime) {
+        /// <return>ponderを開始したならtrue</return>
+        public bool StartPonder(Board board, PlayerTime btime, PlayerTime wtime) {
             if (string.IsNullOrEmpty(LastPonderMove))
-                return;
+                return false;
             logger.Debug("ponder開始");
-            var notation = board.ToNotation();
-            notation.Moves = Enumerable.Concat(notation.Moves,
-                new[] { new MoveDataEx(SFENNotationReader.ToMoveData(LastPonderMove)) })
-                .ToArray();
+            PonderStarting.InvokeSafe(this, board);
+            var b = board.Clone();
+            b.Do(Move.FromNotation(b, SFENNotationReader.ToMoveData(LastPonderMove)));
             var colorIsBlack = board.Turn != 0; // LastPonderMoveの分があるので手番反転
             InitializeBeforeGo();
             IsPondering = true;
-            Driver.SendPosition(notation);
+            PositionChanged.InvokeSafe(this, b);
+            Driver.SendPosition(b.ToNotation());
             Driver.SendGo(true, btime, wtime, colorIsBlack, ByoyomiHack);
+            return true;
         }
 
         /// <summary>
@@ -351,10 +368,7 @@ namespace ShogiCore {
 
             }
 
-            var CommandReceived = this.CommandReceived;
-            if (CommandReceived != null) {
-                CommandReceived(sender, e);
-            }
+            CommandReceived.InvokeSafe(sender, e);
         }
 
         /// <summary>
@@ -450,10 +464,7 @@ namespace ShogiCore {
                 }
             }
 
-            var InfoReceived = this.InfoReceived;
-            if (InfoReceived != null) {
-                InfoReceived(sender, e);
-            }
+            InfoReceived.InvokeSafe(sender, e);
         }
     }
 }
