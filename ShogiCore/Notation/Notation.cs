@@ -63,6 +63,10 @@ namespace ShogiCore.Notation {
         /// </summary>
         public int TimeB { get; set; }
         /// <summary>
+        /// 加算時間[ミリ秒]
+        /// </summary>
+        public int TimeInc { get; set; }
+        /// <summary>
         /// 棋譜の「手数=93」とかの値。
         /// </summary>
         public int InitMoveCount { get; set; }

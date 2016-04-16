@@ -386,12 +386,12 @@ namespace ShogiCore.CSA {
                             // 時間の算出を行う
                             Moves.Add(move);
                             MilliSecondsList.Add(ms);
-                            playerTimes[CurrentBoard.Turn].Consume(ms);
+                            time.Consume(ms);
                         } else {
                             // 既にSendMove側で手を進めていた場合、時間の補正のみ行う。
                             move = Moves.LastOrDefault();
                             if (m.Groups[3].Success) { // 時間を受信出来ていた場合
-                                playerTimes[CurrentBoard.Turn].Remain -= ms - MilliSecondsList.LastOrDefault();
+                                time.Remain -= ms - MilliSecondsList.LastOrDefault();
                                 MilliSecondsList[MilliSecondsList.Count - 1] = ms;
                             }
                         }
@@ -464,6 +464,7 @@ namespace ShogiCore.CSA {
                         Debug.Assert(State == CSAState.AgreeWaiting);
                         GameID = line.Substring(cologne + 1);
                         OnStartReceived();
+                        lastStartTime = Environment.TickCount;
                         break;
 
                     case "REJECT": // REJECT:<GameID> by <rejector>

@@ -182,10 +182,13 @@ namespace ShogiCore.Notation {
                                 if (sp[0] == "$EVENT") { // 棋戦名
                                     // 例：$EVENT:wdoor+floodgate-900-0+gps_l+BlunderXX_4c+20130411100005
                                     // floodgateのイベント命名規則に合致してる場合、そこから持ち時間情報を取得。
-                                    Match m = Regex.Match(sp[1], @"^\s*[\w+-]+-(\d+)-(\d+)\+[\w+-]+\s*$");
+                                    Match m = Regex.Match(sp[1], @"^\s*([\w+\-]+)-(\d+)-(\d+)(F?)(-(\d+))?\+(.+)\+(.+)\+\d+\s*$");
                                     if (m.Success) {
-                                        notation.TimeA = int.Parse(m.Groups[1].Value) * 1000;
-                                        notation.TimeB = int.Parse(m.Groups[2].Value) * 1000;
+                                        notation.TimeA = int.Parse(m.Groups[2].Value) * 1000;
+                                        if (m.Groups[4].Value == "F")
+                                            notation.TimeInc = int.Parse(m.Groups[3].Value) * 1000;
+                                        else
+                                            notation.TimeB = int.Parse(m.Groups[3].Value) * 1000;
                                     }
                                 } else if (sp[0] == "$TIME_LIMIT") { // 持ち時間(持ち時間と秒読み)
                                     // $TIME_LIMIT:HH:MM+SS
@@ -233,6 +236,12 @@ namespace ShogiCore.Notation {
                             notation.Abnormal = true;
                         } else if (line.StartsWith("%ILLEGAL_MOVE", StringComparison.Ordinal)) { // 反則負け(手番側の反則負け、反則の内容はコメントで記録可能) 
                             notation.Winner = moves.Count % 2 == 0 ? 1 : 0;
+                            notation.Abnormal = true;
+                        } else if (line.StartsWith("%+ILLEGAL_ACTION", StringComparison.Ordinal)) { // 先手(下手)の反則行為により、後手(上手)の勝ち
+                            notation.Winner = 1;
+                            notation.Abnormal = true;
+                        } else if (line.StartsWith("%-ILLEGAL_ACTION", StringComparison.Ordinal)) { // 後手(上手)の反則行為により、先手(下手)の勝ち
+                            notation.Winner = 0;
                             notation.Abnormal = true;
                         } else if (line.StartsWith("%JISHOGI", StringComparison.Ordinal)) { // 持将棋
                             notation.Winner = -1;
