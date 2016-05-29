@@ -1,10 +1,9 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace ShogiCore {
-    [TestClass]
     public class EngineStatisticsForAllGamesTest {
-        [TestMethod]
+        [Fact]
         public void TestToString() {
             EngineStatisticsForGame g = new EngineStatisticsForGame();
             g.States.Add(new EngineStatisticsForGame.State {
@@ -26,12 +25,12 @@ namespace ShogiCore {
             EngineStatisticsForAllGames a = new EngineStatisticsForAllGames();
             a.Add(g);
 
-            Assert.AreEqual(
-                "通算平均時間(実測)：平均=12 %(序盤～終盤)=17/18/20/22/23" + Environment.NewLine +
-                "通算平均時間(USI)： 平均=12 %(序盤～終盤)=17/18/20/22/23" + Environment.NewLine +
-                "通算平均深さ：      平均=4.0 %(序盤～終盤)=20/20/20/20/20" + Environment.NewLine +
-                "通算平均ノード数：  平均=1,200 %(序盤～終盤)=17/18/20/22/23" + Environment.NewLine +
-                "通算平均NPS：       平均=1,000 %(序盤～終盤)=20/20/20/20/20",
+            Assert.Equal(
+                "通算平均時間(実測)：序盤～終盤=10/11/12/13/14 平均=12" + Environment.NewLine +
+                "通算平均時間(USI)： 序盤～終盤=10/11/12/13/14 平均=12" + Environment.NewLine +
+                "通算平均深さ：      序盤～終盤=4.0/4.0/4.0/4.0/4.0 平均=4.0" + Environment.NewLine +
+                "通算平均ノード数：  序盤～終盤=1,000/1,100/1,200/1,300/1,400 平均=1,200" + Environment.NewLine +
+                "通算平均NPS：       序盤～終盤=1,000/1,000/1,000/1,000/1,000 平均=1,000",
                 a.ToString());
         }
     }

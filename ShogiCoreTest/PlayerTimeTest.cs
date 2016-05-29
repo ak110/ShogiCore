@@ -1,13 +1,12 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace ShogiCore {
-    [TestClass]
     public class PlayerTimeTest {
         /// <summary>
         /// PlayerTime.Consumeのテスト
         /// </summary>
-        [TestMethod]
+        [Fact]
         public void ConsumeTest1() {
             // 秒読み1秒
             ConsumeTestImpl(0, 1000, 0);
@@ -35,15 +34,15 @@ namespace ShogiCore {
             playerTime.Delay = ngTime < 1000 ? 1000 - ngTime : 0;
             playerTime.Reset();
 
-            Assert.IsFalse(playerTime.Consume(ngTime));
-            Assert.IsTrue(playerTime.Consume(ngTime - 1));
-            Assert.AreEqual(nextTime, playerTime.Remain);
+            Assert.False(playerTime.Consume(ngTime));
+            Assert.True(playerTime.Consume(ngTime - 1));
+            Assert.Equal(nextTime, playerTime.Remain);
         }
 
         /// <summary>
         /// PlayerTime.Consumeのテスト
         /// </summary>
-        [TestMethod]
+        [Fact]
         public void ConsumeTest2() {
             var playerTime = new PlayerTime();
             playerTime.Unit = 500;
@@ -51,17 +50,17 @@ namespace ShogiCore {
             playerTime.Byoyomi = 500;
             playerTime.Increment = 1234;
             // 持ち時間+秒読みを超えるとNG
-            Assert.IsFalse(playerTime.Consume(1500));
+            Assert.False(playerTime.Consume(1500));
             // ぎりぎりOK
-            Assert.IsTrue(playerTime.Consume(1499));
+            Assert.True(playerTime.Consume(1499));
             // 持ち時間が尽きたけどIncrementの分増える
-            Assert.AreEqual(playerTime.Remain, 1234);
+            Assert.Equal(playerTime.Remain, 1234);
             // TimeUnit未満は消費無し
-            Assert.IsTrue(playerTime.Consume(499));
-            Assert.AreEqual(playerTime.Remain, 1234 * 2);
+            Assert.True(playerTime.Consume(499));
+            Assert.Equal(playerTime.Remain, 1234 * 2);
         }
 
-        [TestMethod]
+        [Fact]
         public void ToStringTest() {
             var playerTime = new PlayerTime();
             playerTime.Unit = 500;
@@ -70,27 +69,27 @@ namespace ShogiCore {
             playerTime.Byoyomi = 500;
             playerTime.Increment = 1234;
             playerTime.Delay = 100;
-            Assert.AreEqual("単位=0.5,持ち=10,残り=1,秒読み=0.5,加算=1.234,遅延=0.1", playerTime.ToString());
+            Assert.Equal("単位=0.5,持ち=10,残り=1,秒読み=0.5,加算=1.234,遅延=0.1", playerTime.ToString());
         }
 
-        [TestMethod]
+        [Fact]
         public void GetFixedTimeTest() {
             var playerTime = new PlayerTime();
             playerTime.Unit = 333;
             playerTime.LeastPerMove = 0;
             playerTime.Roundup = false;
-            Assert.AreEqual(0, playerTime.GetFixedTime(332));
-            Assert.AreEqual(333, playerTime.GetFixedTime(333));
-            Assert.AreEqual(333, playerTime.GetFixedTime(334));
+            Assert.Equal(0, playerTime.GetFixedTime(332));
+            Assert.Equal(333, playerTime.GetFixedTime(333));
+            Assert.Equal(333, playerTime.GetFixedTime(334));
             playerTime.Roundup = true;
-            Assert.AreEqual(333, playerTime.GetFixedTime(332));
-            Assert.AreEqual(333, playerTime.GetFixedTime(333));
-            Assert.AreEqual(666, playerTime.GetFixedTime(334));
+            Assert.Equal(333, playerTime.GetFixedTime(332));
+            Assert.Equal(333, playerTime.GetFixedTime(333));
+            Assert.Equal(666, playerTime.GetFixedTime(334));
             playerTime.Roundup = false;
             playerTime.LeastPerMove = 333;
-            Assert.AreEqual(333, playerTime.GetFixedTime(332));
-            Assert.AreEqual(333, playerTime.GetFixedTime(333));
-            Assert.AreEqual(333, playerTime.GetFixedTime(334));
+            Assert.Equal(333, playerTime.GetFixedTime(332));
+            Assert.Equal(333, playerTime.GetFixedTime(333));
+            Assert.Equal(333, playerTime.GetFixedTime(334));
         }
     }
 }

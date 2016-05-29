@@ -29,13 +29,13 @@ namespace ShogiCore {
             /// </summary>
             public string ToString(string format) {
                 var t = Totals.Sum();
-                return "平均=" + (t / 5 / Count).ToString(format)
-                    + " %(序盤～終盤)"
-                    + "=" + (int)Math.Round(100.0 * Totals[0] / t)
-                    + "/" + (int)Math.Round(100.0 * Totals[1] / t)
-                    + "/" + (int)Math.Round(100.0 * Totals[2] / t)
-                    + "/" + (int)Math.Round(100.0 * Totals[3] / t)
-                    + "/" + (int)Math.Round(100.0 * Totals[4] / t)
+                return "序盤～終盤"
+                    + "=" + (Totals[0] / Count).ToString(format)
+                    + "/" + (Totals[1] / Count).ToString(format)
+                    + "/" + (Totals[2] / Count).ToString(format)
+                    + "/" + (Totals[3] / Count).ToString(format)
+                    + "/" + (Totals[4] / Count).ToString(format)
+                    + " 平均=" + (Totals.Average() / Count).ToString(format)
                     ;
             }
         }
