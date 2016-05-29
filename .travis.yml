@@ -1,0 +1,17 @@
+language: csharp
+sudo: false
+solution: ShogiCore.sln
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gtk-sharp2
+
+script:
+  - nuget restore ShogiCore.sln
+  - xbuild /p:Configuration=Debug ShogiCore.sln
