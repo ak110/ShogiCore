@@ -13,5 +13,5 @@ matrix:
             - gtk-sharp2
 
 script:
-  - nuget restore ShogiCore.sln
-  - xbuild /p:Configuration=Debug ShogiCore.sln
+  - make build || true
+  - mono packages/xunit.runners.1.9.2/tools/xunit.console.clr4.exe ShogiCoreTest/bin/Debug/ShogiCoreTest.dll

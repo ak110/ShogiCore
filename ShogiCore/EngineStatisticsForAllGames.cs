@@ -28,7 +28,6 @@ namespace ShogiCore {
             /// 文字列化
             /// </summary>
             public string ToString(string format) {
-                var t = Totals.Sum();
                 return "序盤～終盤"
                     + "=" + (Totals[0] / Count).ToString(format)
                     + "/" + (Totals[1] / Count).ToString(format)
