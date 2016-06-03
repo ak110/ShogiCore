@@ -27,13 +27,10 @@ namespace ShogiCore.Notation {
             // 盤面
             BoardData board = notation.InitialBoard;
             if (board == null) {
-                str.Append("PI\n");
+                str.Append("PI\n+\n");
             } else {
                 str.Append(ToString(board));
             }
-            // 手番
-            int firstTurn = board == null || board.Turn == 0 ? 0 : 1;
-            str.Append(firstTurn == 0 ? "+\n" : "-\n");
             // 着手
             if (notation.Moves != null) {
                 board = board == null ? BoardData.CreateEquality() : board.Clone();
@@ -45,6 +42,7 @@ namespace ShogiCore.Notation {
 
             // 終局理由とかも必要なのだがとりあえず未実装気味
 
+            int firstTurn = board == null || board.Turn == 0 ? 0 : 1;
             if (notation.Winner == -1) {
                 // TODO: 引き分けは千日手と持将棋があるのでどうにかする
             } else if ((firstTurn ^ (notation.Moves.Length % 2) ^ 1) == notation.Winner) {
@@ -93,6 +91,8 @@ namespace ShogiCore.Notation {
                     str.Append('\n');
                 }
             }
+            // 手番
+            str.Append(board.Turn == 0 ? "+\n" : "-\n");
             return str.ToString();
         }
 
