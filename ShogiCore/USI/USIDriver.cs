@@ -222,8 +222,8 @@ namespace ShogiCore.USI {
                 }
 
                 Send("usi");
-                // usiokまで待つ。(とりあえず適当に最大30秒)
-                if (!WaitFor(30000, command => {
+                // usiokまで待つ。(とりあえず適当に最大60秒)
+                if (!WaitFor(60000, command => {
                     switch (command.Name) {
                         case "usiok": return true;
                         case "id":
