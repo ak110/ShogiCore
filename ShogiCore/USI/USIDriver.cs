@@ -176,8 +176,10 @@ namespace ShogiCore.USI {
         /// <summary>
         /// エンジンの起動
         /// </summary>
+        /// <param name="timeout">タイムアウト</param>
+        /// <param name="processPriorityClass">プロセス優先度</param>
         /// <returns>true:起動した、false:起動済み</returns>
-        public bool Start(ProcessPriorityClass pricessPriorityClass = ProcessPriorityClass.Normal) {
+        public bool Start(int timeout, ProcessPriorityClass processPriorityClass = ProcessPriorityClass.Normal) {
             try {
                 if (IsStarted)
                     return false;
@@ -216,14 +218,14 @@ namespace ShogiCore.USI {
                     logger.Warn("ProcessorAffinityの設定に失敗", e);
                 }
                 try {
-                    process.PriorityClass = pricessPriorityClass;
+                    process.PriorityClass = processPriorityClass;
                 } catch (Exception e) {
                     logger.Warn("PriorityClassの設定に失敗", e);
                 }
 
                 Send("usi");
                 // usiokまで待つ。(とりあえず適当に最大60秒)
-                if (!WaitFor(60000, command => {
+                if (!WaitFor(timeout, command => {
                     switch (command.Name) {
                         case "usiok": return true;
                         case "id":

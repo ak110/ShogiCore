@@ -16,6 +16,11 @@ namespace ShogiCore {
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
+        /// USIで色々待つときのタイムアウト値
+        /// </summary>
+        private const int UsiTimeout = 120000;
+
+        /// <summary>
         /// 詰みの値
         /// </summary>
         public const int MateValue = 10000000;
@@ -182,12 +187,12 @@ namespace ShogiCore {
             GameStart(ProcessPriorityClass.Normal);
         }
 
-        public void GameStart(ProcessPriorityClass pricessPriorityClass) {
-            if (Driver.Start(pricessPriorityClass)) {
+        public void GameStart(ProcessPriorityClass processPriorityClass) {
+            if (Driver.Start(UsiTimeout, processPriorityClass)) {
                 foreach (KeyValuePair<string, string> p in Options)
                     Driver.SendSetOption(p.Key, p.Value);
             }
-            if (!Driver.WaitForReadyOK(30000))
+            if (!Driver.WaitForReadyOK(UsiTimeout))
                 throw new ApplicationException("USIエンジンからの応答無し: エンジン=" + Name);
             Driver.SendUSINewGame();
         }
@@ -210,7 +215,7 @@ namespace ShogiCore {
                     } else {
                         logger.Debug("ponder失敗");
                         Driver.SendStop();
-                        if (!Driver.WaitFor(30000, x => x.Name == "bestmove"))
+                        if (!Driver.WaitFor(UsiTimeout, x => x.Name == "bestmove"))
                             logger.Warn("ponderに対するstopでbestmoveが未着 (1)");
                         PonderStopped.InvokeSafe(this, board);
                     }
@@ -318,7 +323,7 @@ namespace ShogiCore {
         public void GameEnd(GameResult result) {
             if (IsPondering) {
                 Driver.SendStop();
-                if (!Driver.WaitFor(30000, x => x.Name == "bestmove"))
+                if (!Driver.WaitFor(UsiTimeout, x => x.Name == "bestmove"))
                     logger.Warn("ponderに対するstopでbestmoveが未着  (2)");
                 IsPondering = false;
             }
