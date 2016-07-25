@@ -188,7 +188,7 @@ namespace ShogiCore {
                     Driver.SendSetOption(p.Key, p.Value);
             }
             if (!Driver.WaitForReadyOK(30000))
-                throw new ApplicationException("USIエンジンからの応答がありませんでした。");
+                throw new ApplicationException("USIエンジンからの応答無し: エンジン=" + Name);
             Driver.SendUSINewGame();
         }
 
@@ -235,7 +235,7 @@ namespace ShogiCore {
                 WaitForBestMove:
                 return WaitForBestMove(board, board.Turn == 0 ? btime : wtime);
             } catch (Exception e) {
-                throw new ApplicationException("USIエンジンの思考時に例外発生。エンジン=" + Name + " SFEN=" + sfen, e);
+                throw new ApplicationException("USIエンジンの思考時に例外発生: エンジン=" + Name + " SFEN=" + sfen, e);
             } finally {
                 LastTurnStopwatch.Stop();
             }
@@ -264,11 +264,12 @@ namespace ShogiCore {
                         return Move.Resign;
                     // 異常終了
                     if (Driver.IsProcessExited)
-                        throw new ApplicationException("USIエンジンの異常終了");
+                        throw new ApplicationException("USIエンジンの異常終了: エンジン=" + Name);
                     // 無応答。ぎりぎり時間切れではなく盛大にオーバーしてる場合。(閾値は適当。単位時間×16とした。)
                     int time = (int)LastTurnStopwatch.ElapsedMilliseconds;
                     if (t.GetLimitTime() + t.Unit * 16 <= time) {
-                        throw new ApplicationException("USIエンジンが無応答" +
+                        throw new ApplicationException("USIエンジンが無応答:" +
+                            " エンジン=" + Name +
                             " 実測時間=" + (time / 1000.0) +
                             " USI時間=" + (LastTime ?? 0) / 1000.0 +
                             " " + t);
@@ -309,7 +310,7 @@ namespace ShogiCore {
             try {
                 Driver.SendStop();
             } catch (Exception e) {
-                logger.Debug("Abort時に例外発生", e);
+                logger.Debug("Abort時に例外発生: エンジン=" + Name, e);
             }
             Driver.Kill();
         }
