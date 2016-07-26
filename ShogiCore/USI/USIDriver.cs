@@ -104,6 +104,11 @@ namespace ShogiCore.USI {
         }
 
         /// <summary>
+        /// エンジンのプロセスの環境変数。Start前に設定すること。
+        /// </summary>
+        public Dictionary<string, string> ProcessEnvVars { get; private set; }
+
+        /// <summary>
         /// ゲーム中ならtrueなフラグ。
         /// </summary>
         /// <remarks>
@@ -163,6 +168,7 @@ namespace ShogiCore.USI {
         /// <param name="logID">ログ記録用のエンジンのID</param>
         public USIDriver(string engineFileName, string engineArguments = null, int logID = 1) {
             Options = new List<OptionEntry>();
+            ProcessEnvVars = new Dictionary<string, string>();
             this.engineFileName = engineFileName;
             this.engineArguments = engineArguments;
             LogID = logID;
@@ -203,6 +209,8 @@ namespace ShogiCore.USI {
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.RedirectStandardInput = true;
+                foreach (var p in ProcessEnvVars)
+                    process.StartInfo.EnvironmentVariables[p.Key] = p.Value;
                 process.EnableRaisingEvents = true;
                 process.OutputDataReceived += process_OutputDataReceived;
                 process.ErrorDataReceived += process_ErrorDataReceived;
