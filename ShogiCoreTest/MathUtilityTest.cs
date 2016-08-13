@@ -4,6 +4,28 @@ using Xunit;
 namespace ShogiCore {
     public class MathUtilityTest {
         [Fact]
+        public void TestNormSDist() {
+            Assert.Equal(0.001350, MathUtility.NormSDist(-3), 6);
+            Assert.Equal(0.022750, MathUtility.NormSDist(-2), 6);
+            Assert.Equal(0.158655, MathUtility.NormSDist(-1), 6);
+            Assert.Equal(0.500000, MathUtility.NormSDist(+0), 6);
+            Assert.Equal(0.841345, MathUtility.NormSDist(+1), 6);
+            Assert.Equal(0.977250, MathUtility.NormSDist(+2), 6);
+            Assert.Equal(0.998650, MathUtility.NormSDist(+3), 6);
+        }
+
+        [Fact]
+        public void TestNormSInv() {
+            Assert.Equal(-3.0, MathUtility.NormSInv(0.001350), 2);
+            Assert.Equal(-2.0, MathUtility.NormSInv(0.022750), 2);
+            Assert.Equal(-1.0, MathUtility.NormSInv(0.158655), 2);
+            Assert.Equal(+0.0, MathUtility.NormSInv(0.500000), 2);
+            Assert.Equal(+1.0, MathUtility.NormSInv(0.841345), 2);
+            Assert.Equal(+2.0, MathUtility.NormSInv(0.977250), 2);
+            Assert.Equal(+3.0, MathUtility.NormSInv(0.998650), 2);
+        }
+
+        [Fact]
         public void TestSignTest() {
             Assert.Equal(0.588099, MathUtility.SignTest(10, 10), 6);
             Assert.Equal(0.994091, MathUtility.SignTest(5, 15), 6);
