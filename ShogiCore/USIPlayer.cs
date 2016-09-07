@@ -270,11 +270,14 @@ namespace ShogiCore {
                     // 異常終了
                     if (Driver.IsProcessExited)
                         throw new ApplicationException("USIエンジンの異常終了: エンジン=" + Name);
-                    // 無応答。ぎりぎり時間切れではなく盛大にオーバーしてる場合。(閾値は適当。単位時間×16とした。)
+                    // 無応答。ぎりぎり時間切れではなく盛大にオーバーしてる場合。
+                    // (閾値は適当。単位時間に依らず30秒待ってダメならきっとバグってると思われる。)
                     int time = (int)LastTurnStopwatch.ElapsedMilliseconds;
-                    if (t.GetLimitTime() + t.Unit * 16 <= time) {
+                    int limit = t.GetLimitTime();
+                    if (limit + 30000 <= time) {
                         throw new ApplicationException("USIエンジンが無応答:" +
                             " エンジン=" + Name +
+                            " 上限時間=" + (limit / 1000.0) +
                             " 実測時間=" + (time / 1000.0) +
                             " USI時間=" + (LastTime ?? 0) / 1000.0 +
                             " " + t);
