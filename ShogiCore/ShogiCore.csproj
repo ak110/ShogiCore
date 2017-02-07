@@ -133,6 +133,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomPlayer.cs" />
     <Compile Include="RandUtility.cs" />
+    <Compile Include="Search\SEE.cs" />
     <Compile Include="SortedListOfLong.cs" />
     <Compile Include="SuccessFailureCounter.cs" />
     <Compile Include="Threading\CallbackTimer.cs" />
