@@ -451,9 +451,12 @@ namespace ShogiCore {
         /// 上下・敵味方の反転。(デバッグとか用)
         /// </summary>
         public Move Reverse() {
-            return new Move(Board.BoardCenter - From,
-                Board.BoardCenter - To, Promote,
-                PieceUtility.SelfOrEnemy[1 * 32 + (byte)Capture]);
+            Move move = new Move();
+            move.From = IsPut ? From : (byte)(Board.BoardCenter - From);
+            move.To = (byte)(Board.BoardCenter - To);
+            move.Promote = Promote;
+            move.Capture = PieceUtility.SelfOrEnemy[1 * 32 + (byte)Capture];
+            return move;
         }
 
         /// <summary>

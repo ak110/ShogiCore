@@ -1071,8 +1071,11 @@ namespace ShogiCore {
             if (!PieceUtility.IsSelf(board[move.From], Turn)) return false;
             if (!PieceUtility.IsMovable(board[move.To], Turn)) return false;
 
-            // 成る手なのに成れない駒ならダメ。
-            if (move.IsPromote && !PieceUtility.CanPromote(board[move.From])) return false;
+            // 成る手
+            if (move.IsPromote) {
+                if (!PieceUtility.CanPromote(board[move.From])) return false;
+                if (GetRank(move.To, Turn) > 3 && GetRank(move.From, Turn) > 3) return false;
+            }
 
             // 行き所の無い駒
             Piece pieceType = board[move.From] & ~Piece.ENEMY;
@@ -1154,8 +1157,11 @@ namespace ShogiCore {
             if (!PieceUtility.IsSelf(board[move.From], Turn)) return "自駒以外を動かす手";
             if (!PieceUtility.IsMovable(board[move.To], Turn)) return "移動先が自駒か壁";
 
-            // 成る手なのに成れない駒ならダメ。
-            if (move.IsPromote && !PieceUtility.CanPromote(board[move.From])) return "成れない駒の成る手";
+            // 成る手
+            if (move.IsPromote) {
+                if (!PieceUtility.CanPromote(board[move.From])) return "成れない駒の成る手";
+                if (GetRank(move.To, Turn) > 3 && GetRank(move.From, Turn) > 3) return "成れない移動元・先の成る手";
+            }
 
             // 行き所の無い駒
             Piece pieceType = board[move.From] & ~Piece.ENEMY;

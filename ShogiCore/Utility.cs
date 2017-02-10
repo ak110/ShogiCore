@@ -452,7 +452,7 @@ namespace ShogiCore {
         /// Array.IndexOf
         /// </summary>
         public static int IndexOf<T>(T[] array, T value, int startIndex, int count) {
-            return Array.IndexOf(array, value);
+            return Array.IndexOf(array, value, startIndex, count);
         }
         /// <summary>
         /// Array.IndexOf
